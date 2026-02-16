@@ -1,6 +1,5 @@
 <?php
 
-use app\controllers\ApiExampleController;
 use app\controllers\RegionController;
 use app\controllers\VilleController;
 use app\controllers\ArticleController;
@@ -21,16 +20,9 @@ use flight\net\Router;
 // This wraps all routes in the group with the SecurityHeadersMiddleware
 $router->group('', function (Router $router) use ($app) {
 
+	// Redirection de l'accueil vers le tableau de bord
 	$router->get('/', function () use ($app) {
-		$app->render('welcome', ['message' => 'Niova ve? You are gonna do great things!']);
-	});
-
-	$router->get('/route-iray', function () {
-		echo '<h1>Route iray ve!</h1>';
-	});
-
-	$router->get('/hello-world/@name', function ($name) {
-		echo '<h1>Hello world! Oh hey ' . $name . '!</h1>';
+		$app->redirect('/dashboard');
 	});
 
 	// ===========================
@@ -61,15 +53,6 @@ $router->group('', function (Router $router) use ($app) {
 	$router->get('/dispatches', [DispatchController::class, 'page']);
 	$router->get('/dispatches/create', [DispatchController::class, 'createPage']);
 	$router->post('/dispatches', [DispatchController::class, 'store']);
-
-	// ===========================
-	// API Example (original)
-	// ===========================
-	$router->group('/api', function () use ($router) {
-		$router->get('/users', [ApiExampleController::class, 'getUsers']);
-		$router->get('/users/@id:[0-9]', [ApiExampleController::class, 'getUser']);
-		$router->post('/users/@id:[0-9]', [ApiExampleController::class, 'updateUser']);
-	});
 
 	// ===========================
 	// API BNGRC — Tableau de bord
