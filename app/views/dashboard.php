@@ -11,9 +11,11 @@ function formatMontant($v) { return number_format((float)$v, 0, ',', ' ') . ' Ar
         <h2>📊 Tableau de bord</h2>
         <p>Vue d'ensemble des besoins et des dons attribués par ville</p>
     </div>
-    <a href="/dispatches/simuler" class="btn btn-primary" onclick="event.preventDefault(); simulerDispatch();">
-        <i class="fas fa-sync-alt"></i> Simuler le dispatch
-    </a>
+    <form method="POST" action="/dispatches/simuler" style="display:inline" onsubmit="return confirm('Cela va recalculer tous les dispatches. Continuer ?')">
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-sync-alt"></i> Simuler le dispatch
+        </button>
+    </form>
 </div>
 
 <!-- Statistiques -->

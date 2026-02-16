@@ -9,9 +9,11 @@ function formatMontantDi($v) { return number_format((float)$v, 0, ',', ' ') . ' 
         <p>Distribution des dons attribués aux villes sinistrées</p>
     </div>
     <div class="d-flex gap-2">
-        <button class="btn btn-warning" onclick="simulerDispatch()">
-            <i class="fas fa-sync-alt"></i> Simuler le dispatch
-        </button>
+        <form method="POST" action="/dispatches/simuler" style="display:inline" onsubmit="return confirm('Cela va recalculer tous les dispatches. Continuer ?')">
+            <button type="submit" class="btn btn-warning">
+                <i class="fas fa-sync-alt"></i> Simuler le dispatch
+            </button>
+        </form>
         <a href="/dispatches/create" class="btn btn-primary"><i class="fas fa-plus"></i> Nouveau dispatch</a>
     </div>
 </div>

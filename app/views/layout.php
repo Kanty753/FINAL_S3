@@ -672,16 +672,6 @@
             }
         }
 
-        function simulerDispatch() {
-            if (confirm('Cela va recalculer tous les dispatches. Continuer ?')) {
-                var form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '/dispatches/simuler';
-                document.body.appendChild(form);
-                form.submit();
-            }
-        }
-
         function formatNumber(n) {
             return new Intl.NumberFormat('fr-FR').format(n);
         }
