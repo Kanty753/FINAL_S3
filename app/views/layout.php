@@ -506,6 +506,71 @@
         .d-flex { display: flex; }
         .align-center { align-items: center; }
         .justify-between { justify-content: space-between; }
+
+        /* ====== FOOTER ====== */
+        .footer {
+            margin-left: 270px;
+            background: linear-gradient(135deg, #2D3436 0%, #1a1a2e 100%);
+            color: rgba(255, 255, 255, 0.8);
+            padding: 32px 40px;
+            border-top: 3px solid var(--primary);
+        }
+        .footer-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 24px;
+        }
+        .footer-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--primary-light);
+            margin-bottom: 8px;
+        }
+        .footer-participants {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+        .footer-participant {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(108, 92, 231, 0.12);
+            border: 1px solid rgba(108, 92, 231, 0.25);
+            padding: 8px 16px;
+            border-radius: 50px;
+            transition: var(--transition);
+        }
+        .footer-participant:hover {
+            background: rgba(108, 92, 231, 0.25);
+            transform: translateY(-2px);
+        }
+        .footer-participant .etu {
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: var(--secondary);
+        }
+        .footer-participant .name {
+            font-weight: 500;
+            font-size: 0.85rem;
+            color: var(--white);
+        }
+        .footer-copy {
+            font-size: 0.78rem;
+            color: rgba(255, 255, 255, 0.4);
+        }
+        @media (max-width: 1024px) {
+            .footer { margin-left: 220px; padding: 24px; }
+        }
+        @media (max-width: 768px) {
+            .footer { margin-left: 0; }
+            .footer-content { flex-direction: column; align-items: flex-start; }
+        }
     </style>
 </head>
 <body>
@@ -570,6 +635,32 @@
 
         <?= $content ?? '' ?>
     </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div>
+                <div class="footer-title"><i class="fas fa-users"></i> Participants</div>
+                <div class="footer-participants">
+                    <div class="footer-participant">
+                        <span class="etu">ETU004061</span>
+                        <span class="name">Karl</span>
+                    </div>
+                    <div class="footer-participant">
+                        <span class="etu">ETU004103</span>
+                        <span class="name">Kanty</span>
+                    </div>
+                    <div class="footer-participant">
+                        <span class="etu">ETU004126</span>
+                        <span class="name">Jordie</span>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-copy">
+                © <?= date('Y') ?> BNGRC — Projet S3
+            </div>
+        </div>
+    </footer>
 
     <script nonce="<?= Flight::app()->get('csp_nonce') ?>">
         function confirmDelete(url) {
