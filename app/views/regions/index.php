@@ -1,37 +1,43 @@
-<?php
-ob_start();
-?>
+<?php /** @var array $regions */ ?>
 
-<div class="card-header">
-    <h1>🌍 Liste des régions</h1>
-    <a href="/regions/create" class="btn btn-primary">+ Ajouter une région</a>
+<div class="page-header">
+    <div>
+        <h2><i class="fas fa-map"></i> Régions</h2>
+        <p>Gestion des régions géographiques</p>
+    </div>
+    <a href="/regions/create" class="btn btn-primary"><i class="fas fa-plus"></i> Nouvelle région</a>
 </div>
 
 <div class="card">
-    <table>
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Nom</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php if (empty($regions)): ?>
-                <tr><td colspan="2" class="text-center" style="color:#999; padding:2rem;">Aucune région enregistrée.</td></tr>
-            <?php else: ?>
-                <?php foreach ($regions as $r): ?>
+    <div class="card-title"><i class="fas fa-list"></i> Liste des régions</div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nom</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (!empty($regions)): ?>
+                    <?php foreach ($regions as $r): ?>
                     <tr>
-                        <td><?= $r['id'] ?></td>
-                        <td><strong><?= htmlspecialchars($r['nom']) ?></strong></td>
+                        <td class="text-muted">#<?= $r['id'] ?></td>
+                        <td class="fw-bold"><?= htmlspecialchars($r['nom']) ?></td>
+                        <td class="text-center">
+                            <button class="btn btn-danger btn-sm" onclick="confirmDelete('/api/regions/<?= $r['id'] ?>')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
                     </tr>
-                <?php endforeach; ?>
-            <?php endif; ?>
-        </tbody>
-    </table>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr><td colspan="3">
+                        <div class="empty-state"><i class="fas fa-map"></i><p>Aucune région enregistrée</p></div>
+                    </td></tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
 </div>
-
-<?php
-$content = ob_get_clean();
-$title = 'Régions';
-include __DIR__ . '/../layout.php';
-?>

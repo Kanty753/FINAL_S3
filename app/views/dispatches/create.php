@@ -1,42 +1,42 @@
 <?php
-ob_start();
+/** @var array $dons */
+/** @var array $villes */
 ?>
 
-<h1>📦 Dispatch manuel</h1>
-
-<div class="card" style="max-width: 500px;">
-    <form action="/dispatches" method="POST">
-        <div class="form-group">
-            <label for="don_id">Don (article - reste disponible)</label>
-            <select id="don_id" name="don_id" class="form-control" required>
-                <option value="">-- Sélectionner un don --</option>
-                <?php foreach ($dons as $d): ?>
-                    <option value="<?= $d['id'] ?>"><?= htmlspecialchars($d['article_nom']) ?> - Reste: <?= number_format($d['reste'], 0, ',', ' ') ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="ville_id">Ville</label>
-            <select id="ville_id" name="ville_id" class="form-control" required>
-                <option value="">-- Sélectionner une ville --</option>
-                <?php foreach ($villes as $v): ?>
-                    <option value="<?= $v['id'] ?>"><?= htmlspecialchars($v['nom']) ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="quantite_attribuee">Quantité à attribuer</label>
-            <input type="number" id="quantite_attribuee" name="quantite_attribuee" class="form-control" required min="1" placeholder="Ex: 20">
-        </div>
-        <div class="flex gap-1">
-            <button type="submit" class="btn btn-success">✅ Dispatcher</button>
-            <a href="/dispatches" class="btn btn-danger">Annuler</a>
-        </div>
-    </form>
+<div class="page-header">
+    <div>
+        <h2><i class="fas fa-truck"></i> Nouveau dispatch</h2>
+        <p>Attribuer manuellement un don à une ville</p>
+    </div>
+    <a href="/dispatches" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Retour</a>
 </div>
 
-<?php
-$content = ob_get_clean();
-$title = 'Dispatch manuel';
-include __DIR__ . '/../layout.php';
-?>
+<div class="card" style="max-width:600px">
+    <form method="POST" action="/dispatches">
+        <div class="form-group">
+            <label for="don_id"><i class="fas fa-gift"></i> Don</label>
+            <select name="don_id" id="don_id" class="form-control" required>
+                <option value="">— Sélectionner un don —</option>
+                <?php foreach ($dons as $d): ?>
+                <option value="<?= $d['id'] ?>">Don #<?= $d['id'] ?> — <?= htmlspecialchars($d['article_nom']) ?> (reste: <?= $d['reste'] ?>)</option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="ville_id"><i class="fas fa-city"></i> Ville</label>
+                <select name="ville_id" id="ville_id" class="form-control" required>
+                    <option value="">— Sélectionner une ville —</option>
+                    <?php foreach ($villes as $v): ?>
+                    <option value="<?= $v['id'] ?>"><?= htmlspecialchars($v['nom']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="quantite_attribuee"><i class="fas fa-sort-numeric-up"></i> Quantité à attribuer</label>
+                <input type="number" name="quantite_attribuee" id="quantite_attribuee" class="form-control" placeholder="Ex: 50" min="1" required>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-check"></i> Enregistrer</button>
+    </form>
+</div>

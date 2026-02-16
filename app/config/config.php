@@ -66,10 +66,18 @@ return [
 	 *         Database Settings          *
 	 **************************************/
 	'database' => [
-		'host'     => '172.16.7.157',
-		'dbname'   => 'db_s2_ETU004103',
-		'user'     => 'ETU004103',
-		'password' => 'dA6pkdXy',
+		'host'     => '127.0.0.1',     // Utiliser 127.0.0.1 au lieu de localhost pour forcer TCP (évite l'erreur de socket)
+		'dbname'   => 'bngrc',
+		'user'     => 'root',
+		'password' => '',
+		// MySQL Example:
+		// 'host'     => 'localhost',      // Database host (e.g., 'localhost', 'db.example.com')
+		// 'dbname'   => 'your_db_name',   // Database name (e.g., 'flightphp')
+		// 'user'     => 'your_username',  // Database user (e.g., 'root')
+		// 'password' => 'your_password',  // Database password (never commit real passwords)
+
+		// SQLite Example:
+		// 'file_path' => __DIR__ . $ds . '..' . $ds . 'database.sqlite', // Path to SQLite file
 	],
 
 	// Google OAuth Credentials

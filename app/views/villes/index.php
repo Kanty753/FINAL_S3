@@ -1,39 +1,47 @@
 <?php
-ob_start();
+/** @var array $villes */
 ?>
 
-<div class="card-header">
-    <h1>🏘️ Liste des villes</h1>
-    <a href="/villes/create" class="btn btn-primary">+ Ajouter une ville</a>
+<div class="page-header">
+    <div>
+        <h2><i class="fas fa-city"></i> Villes</h2>
+        <p>Gestion des villes et leur rattachement aux régions</p>
+    </div>
+    <a href="/villes/create" class="btn btn-primary"><i class="fas fa-plus"></i> Nouvelle ville</a>
 </div>
 
 <div class="card">
-    <table>
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Nom</th>
-                <th>Région</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php if (empty($villes)): ?>
-                <tr><td colspan="3" class="text-center" style="color:#999; padding:2rem;">Aucune ville enregistrée.</td></tr>
-            <?php else: ?>
-                <?php foreach ($villes as $v): ?>
+    <div class="card-title"><i class="fas fa-list"></i> Liste des villes</div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nom</th>
+                    <th>Région</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (!empty($villes)): ?>
+                    <?php foreach ($villes as $v): ?>
                     <tr>
-                        <td><?= $v['id'] ?></td>
-                        <td><strong><?= htmlspecialchars($v['nom']) ?></strong></td>
-                        <td><?= htmlspecialchars($v['region_nom']) ?></td>
+                        <td class="text-muted">#<?= $v['id'] ?></td>
+                        <td class="fw-bold"><?= htmlspecialchars($v['nom']) ?></td>
+                        <td><span class="badge badge-purple"><?= htmlspecialchars($v['region_nom']) ?></span></td>
+                        <td class="text-center">
+                            <button class="btn btn-danger btn-sm" onclick="confirmDelete('/api/villes/<?= $v['id'] ?>')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
                     </tr>
-                <?php endforeach; ?>
-            <?php endif; ?>
-        </tbody>
-    </table>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr><td colspan="4">
+                        <div class="empty-state"><i class="fas fa-city"></i><p>Aucune ville enregistrée</p></div>
+                    </td></tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
 </div>
-
-<?php
-$content = ob_get_clean();
-$title = 'Villes';
-include __DIR__ . '/../layout.php';
-?>

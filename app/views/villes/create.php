@@ -1,33 +1,30 @@
 <?php
-ob_start();
+/** @var array $regions */
 ?>
 
-<h1>🏘️ Ajouter une ville</h1>
+<div class="page-header">
+    <div>
+        <h2><i class="fas fa-city"></i> Nouvelle ville</h2>
+        <p>Ajouter une ville rattachée à une région</p>
+    </div>
+    <a href="/villes" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Retour</a>
+</div>
 
-<div class="card" style="max-width: 500px;">
-    <form action="/villes" method="POST">
+<div class="card" style="max-width:600px">
+    <form method="POST" action="/villes">
         <div class="form-group">
-            <label for="nom">Nom de la ville</label>
-            <input type="text" id="nom" name="nom" class="form-control" required placeholder="Ex: Antananarivo">
+            <label for="nom"><i class="fas fa-tag"></i> Nom de la ville</label>
+            <input type="text" name="nom" id="nom" class="form-control" placeholder="Ex: Antananarivo" required>
         </div>
         <div class="form-group">
-            <label for="region_id">Région</label>
-            <select id="region_id" name="region_id" class="form-control" required>
-                <option value="">-- Sélectionner une région --</option>
+            <label for="region_id"><i class="fas fa-map"></i> Région</label>
+            <select name="region_id" id="region_id" class="form-control" required>
+                <option value="">— Sélectionner une région —</option>
                 <?php foreach ($regions as $r): ?>
-                    <option value="<?= $r['id'] ?>"><?= htmlspecialchars($r['nom']) ?></option>
+                <option value="<?= $r['id'] ?>"><?= htmlspecialchars($r['nom']) ?></option>
                 <?php endforeach; ?>
             </select>
         </div>
-        <div class="flex gap-1">
-            <button type="submit" class="btn btn-success">✅ Enregistrer</button>
-            <a href="/villes" class="btn btn-danger">Annuler</a>
-        </div>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-check"></i> Enregistrer</button>
     </form>
 </div>
-
-<?php
-$content = ob_get_clean();
-$title = 'Ajouter une ville';
-include __DIR__ . '/../layout.php';
-?>
