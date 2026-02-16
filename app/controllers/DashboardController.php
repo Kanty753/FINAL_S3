@@ -2,7 +2,6 @@
 
 namespace app\controllers;
 
-use flight\Engine;
 use app\models\Ville;
 use app\models\Besoin;
 use app\models\Don;
@@ -11,9 +10,9 @@ use app\models\Region;
 
 class DashboardController
 {
-    protected Engine $app;
+    protected $app;
 
-    public function __construct(Engine $app)
+    public function __construct($app)
     {
         $this->app = $app;
     }
