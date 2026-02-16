@@ -66,10 +66,21 @@ return [
 	 *         Database Settings          *
 	 **************************************/
 	'database' => [
+<<<<<<< HEAD
 		'host'     => 'localhost',
 		'dbname'   => 'bngrc',
 		'user'     => 'root',
 		'password' => '',
+=======
+		// MySQL Example:
+		// 'host'     => 'localhost',      // Database host (e.g., 'localhost', 'db.example.com')
+		// 'dbname'   => 'your_db_name',   // Database name (e.g., 'flightphp')
+		// 'user'     => 'your_username',  // Database user (e.g., 'root')
+		// 'password' => 'your_password',  // Database password (never commit real passwords)
+
+		// SQLite Example:
+		// 'file_path' => __DIR__ . $ds . '..' . $ds . 'database.sqlite', // Path to SQLite file
+>>>>>>> 46677c7 (main template)
 	],
 
 	// Google OAuth Credentials
