@@ -53,6 +53,8 @@ $router->group('', function (Router $router) use ($app) {
 	$router->get('/dispatches', [DispatchController::class, 'page']);
 	$router->get('/dispatches/create', [DispatchController::class, 'createPage']);
 	$router->post('/dispatches', [DispatchController::class, 'store']);
+	$router->post('/dispatches/simuler', [DispatchController::class, 'simulerPage']);
+	$router->post('/dispatches/reset', [DispatchController::class, 'resetPage']);
 
 	// ===========================
 	// API BNGRC — Tableau de bord

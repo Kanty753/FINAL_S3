@@ -674,10 +674,11 @@
 
         function simulerDispatch() {
             if (confirm('Cela va recalculer tous les dispatches. Continuer ?')) {
-                fetch('/api/dispatches/simuler', { method: 'POST' })
-                    .then(r => r.json())
-                    .then(d => { if(d.success) location.reload(); else alert(d.error || 'Erreur'); })
-                    .catch(() => alert('Erreur de connexion'));
+                var form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/dispatches/simuler';
+                document.body.appendChild(form);
+                form.submit();
             }
         }
 

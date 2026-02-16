@@ -169,4 +169,24 @@ class DispatchController
         $this->dispatchModel->deleteAll();
         $this->app->json(['success' => true, 'message' => 'Tous les dispatches ont été supprimés'], 200, true, 'utf-8', JSON_PRETTY_PRINT);
     }
+
+    /**
+     * POST /dispatches/simuler — Lancer la simulation depuis l'interface HTML et rediriger
+     */
+    public function simulerPage(): void
+    {
+        $donModel = new Don($this->app->db());
+        $besoinModel = new Besoin($this->app->db());
+        $this->dispatchModel->simuler($donModel, $besoinModel);
+        $this->app->redirect('/dispatches');
+    }
+
+    /**
+     * POST /dispatches/reset — Supprimer tous les dispatches depuis l'interface HTML et rediriger
+     */
+    public function resetPage(): void
+    {
+        $this->dispatchModel->deleteAll();
+        $this->app->redirect('/dispatches');
+    }
 }
