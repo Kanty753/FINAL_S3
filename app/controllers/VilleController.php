@@ -4,6 +4,7 @@ namespace app\controllers;
 
 use flight\Engine;
 use app\models\Ville;
+use app\models\Region;
 
 class VilleController
 {
@@ -23,6 +24,49 @@ class VilleController
     {
         $villes = $this->villeModel->findAllWithRegion();
         $this->app->json($villes, 200, true, 'utf-8', JSON_PRETTY_PRINT);
+    }
+
+    /**
+     * GET /villes — Page liste des villes (HTML)
+     */
+    public function page(): void
+    {
+        $villes = $this->villeModel->findAllWithRegion();
+        $content = $this->app->view()->fetch('villes/index', ['villes' => $villes]);
+        $this->app->render('layout', [
+            'content' => $content,
+            'page_title' => 'Villes',
+            'active_page' => 'villes',
+        ]);
+    }
+
+    /**
+     * GET /villes/create — Formulaire de création (HTML)
+     */
+    public function createPage(): void
+    {
+        $regionModel = new Region($this->app->db());
+        $regions = $regionModel->findAll();
+        $content = $this->app->view()->fetch('villes/create', ['regions' => $regions]);
+        $this->app->render('layout', [
+            'content' => $content,
+            'page_title' => 'Nouvelle ville',
+            'active_page' => 'villes',
+        ]);
+    }
+
+    /**
+     * POST /villes — Traiter le formulaire de création (HTML)
+     */
+    public function store(): void
+    {
+        $data = $this->app->request()->data;
+        $nom = $data->nom ?? null;
+        $region_id = $data->region_id ?? null;
+        if ($nom && $region_id) {
+            $this->villeModel->create(['nom' => $nom, 'region_id' => (int) $region_id]);
+        }
+        $this->app->redirect('/villes');
     }
 
     /**

@@ -4,6 +4,7 @@ namespace app\controllers;
 
 use flight\Engine;
 use app\models\Don;
+use app\models\Article;
 
 class DonController
 {
@@ -23,6 +24,52 @@ class DonController
     {
         $dons = $this->donModel->findAllDetailed();
         $this->app->json($dons, 200, true, 'utf-8', JSON_PRETTY_PRINT);
+    }
+
+    /**
+     * GET /dons — Page liste des dons (HTML)
+     */
+    public function page(): void
+    {
+        $dons = $this->donModel->findAllDetailed();
+        $content = $this->app->view()->fetch('dons/index', ['dons' => $dons]);
+        $this->app->render('layout', [
+            'content' => $content,
+            'page_title' => 'Dons',
+            'active_page' => 'dons',
+        ]);
+    }
+
+    /**
+     * GET /dons/create — Formulaire de création (HTML)
+     */
+    public function createPage(): void
+    {
+        $articleModel = new Article($this->app->db());
+        $articles = $articleModel->findAllWithType();
+        $content = $this->app->view()->fetch('dons/create', ['articles' => $articles]);
+        $this->app->render('layout', [
+            'content' => $content,
+            'page_title' => 'Nouveau don',
+            'active_page' => 'dons',
+        ]);
+    }
+
+    /**
+     * POST /dons — Traiter le formulaire de création (HTML)
+     */
+    public function store(): void
+    {
+        $data = $this->app->request()->data;
+        $article_id = $data->article_id ?? null;
+        $quantite = $data->quantite ?? null;
+        if ($article_id && $quantite) {
+            $this->donModel->create([
+                'article_id' => (int) $article_id,
+                'quantite' => (int) $quantite,
+            ]);
+        }
+        $this->app->redirect('/dons');
     }
 
     /**

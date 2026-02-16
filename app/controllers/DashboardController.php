@@ -19,15 +19,40 @@ class DashboardController
     }
 
     /**
-     * GET /api/dashboard — Tableau de bord complet
-     * Retourne :
-     *   - résumé des villes avec total des besoins
-     *   - besoins détaillés par ville
-     *   - dons attribués (dispatches) par ville
-     *   - état global des dons
-     *   - statistiques générales
+     * GET /api/dashboard — Tableau de bord complet (JSON)
      */
     public function index(): void
+    {
+        $data = $this->getDashboardData();
+
+        $this->app->json([
+            'statistiques' => $data['stats'],
+            'etat_dons' => $data['etatDons'],
+            'tableau_de_bord' => $data['dashboard'],
+        ], 200, true, 'utf-8', JSON_PRETTY_PRINT);
+    }
+
+    /**
+     * GET /dashboard — Page tableau de bord (HTML)
+     */
+    public function page(): void
+    {
+        $data = $this->getDashboardData();
+
+        $content = $this->app->view()->fetch('dashboard', [
+            'stats' => $data['stats'],
+            'etat_dons' => $data['etatDons'],
+            'dashboard' => $data['dashboard'],
+        ]);
+
+        $this->app->render('layout', [
+            'content' => $content,
+            'page_title' => 'Tableau de bord',
+            'active_page' => 'dashboard',
+        ]);
+    }
+
+    private function getDashboardData(): array
     {
         $db = $this->app->db();
         $villeModel = new Ville($db);
@@ -36,19 +61,11 @@ class DashboardController
         $dispatchModel = new Dispatch($db);
         $regionModel = new Region($db);
 
-        // Résumé des villes avec totaux
         $villesResume = $villeModel->findAllWithTotalBesoins();
-
-        // Besoins par ville
         $besoinsParVille = $besoinModel->findBesoinsParVille();
-
-        // Dispatches par ville
         $dispatchesParVille = $dispatchModel->findDispatchesParVille();
-
-        // État des dons
         $etatDons = $donModel->findEtatDons();
 
-        // Statistiques générales
         $stats = [
             'total_regions' => $regionModel->count(),
             'total_villes' => $villeModel->count(),
@@ -57,7 +74,6 @@ class DashboardController
             'total_dispatches' => $dispatchModel->count(),
         ];
 
-        // Construction du tableau de bord structuré par ville
         $dashboard = [];
         foreach ($villesResume as $ville) {
             $villeId = $ville['id'];
@@ -70,10 +86,6 @@ class DashboardController
             ];
         }
 
-        $this->app->json([
-            'statistiques' => $stats,
-            'etat_dons' => $etatDons,
-            'tableau_de_bord' => $dashboard,
-        ], 200, true, 'utf-8', JSON_PRETTY_PRINT);
+        return compact('stats', 'etatDons', 'dashboard');
     }
 }

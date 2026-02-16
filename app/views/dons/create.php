@@ -1,0 +1,32 @@
+<?php
+/** @var array $articles */
+?>
+
+<div class="page-header">
+    <div>
+        <h2><i class="fas fa-gift"></i> Nouveau don</h2>
+        <p>Enregistrer un don reçu (article + quantité)</p>
+    </div>
+    <a href="/dons" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Retour</a>
+</div>
+
+<div class="card" style="max-width:600px">
+    <form method="POST" action="/dons">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="article_id"><i class="fas fa-box-open"></i> Article</label>
+                <select name="article_id" id="article_id" class="form-control" required>
+                    <option value="">— Sélectionner un article —</option>
+                    <?php foreach ($articles as $a): ?>
+                    <option value="<?= $a['id'] ?>"><?= htmlspecialchars($a['nom']) ?> (<?= number_format((float)$a['prix_unitaire'], 0, ',', ' ') ?> Ar)</option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="quantite"><i class="fas fa-sort-numeric-up"></i> Quantité</label>
+                <input type="number" name="quantite" id="quantite" class="form-control" placeholder="Ex: 120" min="1" required>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-check"></i> Enregistrer</button>
+    </form>
+</div>

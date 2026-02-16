@@ -6,6 +6,7 @@ use flight\Engine;
 use app\models\Dispatch;
 use app\models\Don;
 use app\models\Besoin;
+use app\models\Ville;
 
 class DispatchController
 {
@@ -25,6 +26,59 @@ class DispatchController
     {
         $dispatches = $this->dispatchModel->findAllDetailed();
         $this->app->json($dispatches, 200, true, 'utf-8', JSON_PRETTY_PRINT);
+    }
+
+    /**
+     * GET /dispatches — Page liste des dispatches (HTML)
+     */
+    public function page(): void
+    {
+        $dispatches = $this->dispatchModel->findAllDetailed();
+        $content = $this->app->view()->fetch('dispatches/index', ['dispatches' => $dispatches]);
+        $this->app->render('layout', [
+            'content' => $content,
+            'page_title' => 'Dispatches',
+            'active_page' => 'dispatches',
+        ]);
+    }
+
+    /**
+     * GET /dispatches/create — Formulaire de création manuelle (HTML)
+     */
+    public function createPage(): void
+    {
+        $donModel = new Don($this->app->db());
+        $villeModel = new Ville($this->app->db());
+        $dons = $donModel->findAvailable();
+        $villes = $villeModel->findAll();
+        $content = $this->app->view()->fetch('dispatches/create', [
+            'dons' => $dons,
+            'villes' => $villes,
+        ]);
+        $this->app->render('layout', [
+            'content' => $content,
+            'page_title' => 'Nouveau dispatch',
+            'active_page' => 'dispatches',
+        ]);
+    }
+
+    /**
+     * POST /dispatches — Traiter le formulaire de création (HTML)
+     */
+    public function store(): void
+    {
+        $data = $this->app->request()->data;
+        $don_id = $data->don_id ?? null;
+        $ville_id = $data->ville_id ?? null;
+        $quantite = $data->quantite_attribuee ?? null;
+        if ($don_id && $ville_id && $quantite) {
+            $this->dispatchModel->create([
+                'don_id' => (int) $don_id,
+                'ville_id' => (int) $ville_id,
+                'quantite_attribuee' => (int) $quantite,
+            ]);
+        }
+        $this->app->redirect('/dispatches');
     }
 
     /**

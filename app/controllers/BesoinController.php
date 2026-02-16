@@ -4,6 +4,8 @@ namespace app\controllers;
 
 use flight\Engine;
 use app\models\Besoin;
+use app\models\Ville;
+use app\models\Article;
 
 class BesoinController
 {
@@ -23,6 +25,59 @@ class BesoinController
     {
         $besoins = $this->besoinModel->findAllDetailed();
         $this->app->json($besoins, 200, true, 'utf-8', JSON_PRETTY_PRINT);
+    }
+
+    /**
+     * GET /besoins — Page liste des besoins (HTML)
+     */
+    public function page(): void
+    {
+        $besoins = $this->besoinModel->findAllDetailed();
+        $content = $this->app->view()->fetch('besoins/index', ['besoins' => $besoins]);
+        $this->app->render('layout', [
+            'content' => $content,
+            'page_title' => 'Besoins',
+            'active_page' => 'besoins',
+        ]);
+    }
+
+    /**
+     * GET /besoins/create — Formulaire de création (HTML)
+     */
+    public function createPage(): void
+    {
+        $villeModel = new Ville($this->app->db());
+        $articleModel = new Article($this->app->db());
+        $villes = $villeModel->findAll();
+        $articles = $articleModel->findAllWithType();
+        $content = $this->app->view()->fetch('besoins/create', [
+            'villes' => $villes,
+            'articles' => $articles,
+        ]);
+        $this->app->render('layout', [
+            'content' => $content,
+            'page_title' => 'Nouveau besoin',
+            'active_page' => 'besoins',
+        ]);
+    }
+
+    /**
+     * POST /besoins — Traiter le formulaire de création (HTML)
+     */
+    public function store(): void
+    {
+        $data = $this->app->request()->data;
+        $ville_id = $data->ville_id ?? null;
+        $article_id = $data->article_id ?? null;
+        $quantite = $data->quantite ?? null;
+        if ($ville_id && $article_id && $quantite) {
+            $this->besoinModel->create([
+                'ville_id' => (int) $ville_id,
+                'article_id' => (int) $article_id,
+                'quantite' => (int) $quantite,
+            ]);
+        }
+        $this->app->redirect('/besoins');
     }
 
     /**

@@ -34,6 +34,35 @@ $router->group('', function (Router $router) use ($app) {
 	});
 
 	// ===========================
+	// Pages HTML (Vues)
+	// ===========================
+	$router->get('/dashboard', [DashboardController::class, 'page']);
+
+	$router->get('/regions', [RegionController::class, 'page']);
+	$router->get('/regions/create', [RegionController::class, 'createPage']);
+	$router->post('/regions', [RegionController::class, 'store']);
+
+	$router->get('/villes', [VilleController::class, 'page']);
+	$router->get('/villes/create', [VilleController::class, 'createPage']);
+	$router->post('/villes', [VilleController::class, 'store']);
+
+	$router->get('/articles', [ArticleController::class, 'page']);
+	$router->get('/articles/create', [ArticleController::class, 'createPage']);
+	$router->post('/articles', [ArticleController::class, 'store']);
+
+	$router->get('/besoins', [BesoinController::class, 'page']);
+	$router->get('/besoins/create', [BesoinController::class, 'createPage']);
+	$router->post('/besoins', [BesoinController::class, 'store']);
+
+	$router->get('/dons', [DonController::class, 'page']);
+	$router->get('/dons/create', [DonController::class, 'createPage']);
+	$router->post('/dons', [DonController::class, 'store']);
+
+	$router->get('/dispatches', [DispatchController::class, 'page']);
+	$router->get('/dispatches/create', [DispatchController::class, 'createPage']);
+	$router->post('/dispatches', [DispatchController::class, 'store']);
+
+	// ===========================
 	// API Example (original)
 	// ===========================
 	$router->group('/api', function () use ($router) {

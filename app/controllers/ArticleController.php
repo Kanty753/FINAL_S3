@@ -4,6 +4,7 @@ namespace app\controllers;
 
 use flight\Engine;
 use app\models\Article;
+use app\models\TypeBesoin;
 
 class ArticleController
 {
@@ -23,6 +24,54 @@ class ArticleController
     {
         $articles = $this->articleModel->findAllWithType();
         $this->app->json($articles, 200, true, 'utf-8', JSON_PRETTY_PRINT);
+    }
+
+    /**
+     * GET /articles — Page liste des articles (HTML)
+     */
+    public function page(): void
+    {
+        $articles = $this->articleModel->findAllWithType();
+        $content = $this->app->view()->fetch('articles/index', ['articles' => $articles]);
+        $this->app->render('layout', [
+            'content' => $content,
+            'page_title' => 'Articles',
+            'active_page' => 'articles',
+        ]);
+    }
+
+    /**
+     * GET /articles/create — Formulaire de création (HTML)
+     */
+    public function createPage(): void
+    {
+        $typeBesoinModel = new TypeBesoin($this->app->db());
+        $types_besoins = $typeBesoinModel->findAll();
+        $content = $this->app->view()->fetch('articles/create', ['types_besoins' => $types_besoins]);
+        $this->app->render('layout', [
+            'content' => $content,
+            'page_title' => 'Nouvel article',
+            'active_page' => 'articles',
+        ]);
+    }
+
+    /**
+     * POST /articles — Traiter le formulaire de création (HTML)
+     */
+    public function store(): void
+    {
+        $data = $this->app->request()->data;
+        $nom = $data->nom ?? null;
+        $type_besoin_id = $data->type_besoin_id ?? null;
+        $prix_unitaire = $data->prix_unitaire ?? null;
+        if ($nom && $type_besoin_id && $prix_unitaire !== null) {
+            $this->articleModel->create([
+                'nom' => $nom,
+                'type_besoin_id' => (int) $type_besoin_id,
+                'prix_unitaire' => (float) $prix_unitaire,
+            ]);
+        }
+        $this->app->redirect('/articles');
     }
 
     /**

@@ -26,6 +26,45 @@ class RegionController
     }
 
     /**
+     * GET /regions — Page liste des régions (HTML)
+     */
+    public function page(): void
+    {
+        $regions = $this->regionModel->findAll();
+        $content = $this->app->view()->fetch('regions/index', ['regions' => $regions]);
+        $this->app->render('layout', [
+            'content' => $content,
+            'page_title' => 'Régions',
+            'active_page' => 'regions',
+        ]);
+    }
+
+    /**
+     * GET /regions/create — Formulaire de création (HTML)
+     */
+    public function createPage(): void
+    {
+        $content = $this->app->view()->fetch('regions/create');
+        $this->app->render('layout', [
+            'content' => $content,
+            'page_title' => 'Nouvelle région',
+            'active_page' => 'regions',
+        ]);
+    }
+
+    /**
+     * POST /regions — Traiter le formulaire de création (HTML)
+     */
+    public function store(): void
+    {
+        $nom = $this->app->request()->data->nom ?? null;
+        if ($nom) {
+            $this->regionModel->create(['nom' => $nom]);
+        }
+        $this->app->redirect('/regions');
+    }
+
+    /**
      * GET /api/regions/@id — Détail d'une région
      */
     public function show(int $id): void
