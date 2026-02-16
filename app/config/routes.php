@@ -8,7 +8,6 @@ use app\controllers\BesoinController;
 use app\controllers\DonController;
 use app\controllers\DispatchController;
 use app\controllers\DashboardController;
-use app\controllers\ApiExampleController;
 use app\middlewares\SecurityHeadersMiddleware;
 use flight\Engine;
 use flight\net\Router;
@@ -140,22 +139,6 @@ $router->group('', function (Router $router) use ($app) {
 		$router->post('/simuler', [DispatchController::class, 'simuler']);
 		$router->delete('/@id:[0-9]+', [DispatchController::class, 'destroy']);
 		$router->delete('', [DispatchController::class, 'destroyAll']);
-	$router->get('/', function () use ($app) {
-		$app->render('welcome', ['message' => 'Niova ve? You are gonna do great things!']);
-	});
-
-	$router->get('/route-iray', function () {
-		echo '<h1>Route iray ve!</h1>';
-	});
-
-	$router->get('/hello-world/@name', function ($name) {
-		echo '<h1>Hello world! Oh hey ' . $name . '!</h1>';
-	});
-
-	$router->group('/api', function () use ($router) {
-		$router->get('/users', [ApiExampleController::class, 'getUsers']);
-		$router->get('/users/@id:[0-9]', [ApiExampleController::class, 'getUser']);
-		$router->post('/users/@id:[0-9]', [ApiExampleController::class, 'updateUser']);
 	});
 
 }, [SecurityHeadersMiddleware::class]);
