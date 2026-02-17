@@ -46,7 +46,8 @@ if (empty($app) === true) {
 $app->path(__DIR__ . $ds . '..' . $ds . '..');
 
 // Core config variables
-$app->set('flight.base_url', '/ETU004103/FINAL_S3_v2/public',);           // Base URL for your app. Change if app is in a subdirectory (e.g., '/myapp/')
+$app->set('flight.base_url', '/',);           // Base URL for your app. Change if app is in a subdirectory (e.g., '/myapp/')
+// $app->set('flight.base_url', '/ETU004103/FINAL_S3_v3/public',);           // Base URL for your app. Change if app is in a subdirectory (e.g., '/myapp/')
 $app->set('flight.case_sensitive', false);    // Set true for case sensitive routes. Default: false
 $app->set('flight.log_errors', true);         // Log errors to file. Recommended: true in production
 $app->set('flight.handle_errors', false);     // Let Tracy handle errors if false. Set true to use Flight's error handler
@@ -75,12 +76,12 @@ return [
 	 **************************************/
 	'database' => [
 		'host'     => 'localhost:3306',     // Utiliser 127.0.0.1 au lieu de localhost pour forcer TCP (évite l'erreur de socket)
-		'dbname'   => 'db_s2_ETU004103',
-		'user'     => 'ETU004103',
-		'password' => 'dA6pkdXy',
-		// 'dbname'   => 'bngrc',
-		// 'user'     => 'root',
-		// 'password' => '',
+		// 'dbname'   => 'db_s2_ETU004103',
+		// 'user'     => 'ETU004103',
+		// 'password' => 'dA6pkdXy',
+		'dbname'   => 'bngrc',
+		'user'     => 'root',
+		'password' => '',
 
 
 		// MySQL Example:

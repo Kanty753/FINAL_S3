@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS besoin (
     ville_id INT NOT NULL,
     article_id INT NOT NULL,
     quantite INT NOT NULL,
-    date_saisie DATETIME DEFAULT CURRENT_TIMESTAMP,
+    date_saisie DATE DEFAULT (CURRENT_DATE),
     FOREIGN KEY (ville_id) REFERENCES ville(id),
     FOREIGN KEY (article_id) REFERENCES article(id)
 ) ENGINE=InnoDB;
@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS don (
     id INT AUTO_INCREMENT PRIMARY KEY,
     article_id INT NOT NULL,
     quantite INT NOT NULL,
-    date_don DATETIME DEFAULT CURRENT_TIMESTAMP,
+    date_don DATE DEFAULT (CURRENT_DATE),
     FOREIGN KEY (article_id) REFERENCES article(id)
 ) ENGINE=InnoDB;
 

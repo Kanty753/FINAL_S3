@@ -1,0 +1,18 @@
+Au debut , on avait qu' une seule facon de dispatcher les besoins si 2 ou plusieur ville ont les memes besoins sur un ressource : dispatcher les besoins en fonctions de l ordres de saisie des besoins,
+c'est a dire la priorite sur la distribution revient a celui qui a soumis les besoins en premier  
+Maintenant , ajoute les fonctionnalites suivantes :
+    . une nouvelle facon de dispatcher les besoins , la priorite revient a celui qui a le plus petite quantite en besoin ( si les besoins en riz sont repartit en 3 dont ville1 2kg , vile2 3kg , 
+    ville3 7kg, celui qui recoit le riz en premier est la ville1 )
+    . une autre face de dispatcher les besoins , les besoins seront repartit proportionnellement entre les ville demandants , et les distribution seront arrondit pour chaque ville (arrondit par defaut si le chiffre 
+    apres la virgule est < 5 et arrondit en exces si le chiffre apres la virgule >=5 , bien evidement il peut y avoir des restes)
+        ..> exemple , si on a a disposition dans les dons 6 tonnes de riz et que 3 villes en fait la demande dont ville1 7 tonnes , ville2 12 tonnes et ville3 5 tonnes . Ce qui fait que 
+        la ville1 doit recevoir 7/6 tonnes , ville2 12/6 tonnes et la ville3 5/6 tonnes , apres arrondissement la ville1 recoit 1 tonnes , la ville2 recoit donc 2 tonnes , et la ville3 recoit 1 tonne, ce qui fait qu'il reste 
+        2 tonnes et on a distribuer 4 tonnes au total 
+
+. Concernant l'interface , lorsqu on simule un dispatch on aura ces 3 option (par ordre de saisie des besoin , par inferiorite des ressources  necessaire , ou par proportionalite) 
+de facon de dispatcher et on validera avec un bouton le dispatch afficher si cela nous convient  
+
+ ####RECTIFICATION####
+Rectification de l methode de dispatch proportionel des dons :
+Si , il le reste une certaine quantite de  don pour les besoinins et que il y a des villes ou leurs besoins ne sont pas encores satisfaites,, on va 
+Redistribuer le reste  aux necessiteux en fonction de leurs decimales restantes
