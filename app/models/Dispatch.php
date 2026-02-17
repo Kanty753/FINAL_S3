@@ -42,6 +42,7 @@ class Dispatch extends BaseModel
     }
 
     /**
+<<<<<<< HEAD
      * Supprimer tous les dispatches (pour la simulation)
      */
     public function deleteAll(): void
@@ -57,15 +58,47 @@ class Dispatch extends BaseModel
     {
         // Vider les dispatches existants
         $this->deleteAll();
+=======
+     * Simuler le dispatch SANS sauvegarder — retourne un tableau de résultats preview
+     * Même logique que simuler() : priorité par date_saisie ASC (premier arrivé = premier servi).
+     * Les attributions sont suivies en mémoire pour redistribuer correctement les restes.
+     */
+    public function simulerPreview(Don $donModel, Besoin $besoinModel): array
+    {
+        $results = [];
+>>>>>>> d3692f7 (commit v1)
 
         // Récupérer tous les dons par ordre de date
         $dons = $donModel->findAllForDispatch();
 
+<<<<<<< HEAD
         // Pour chaque don, distribuer aux villes qui ont besoin de cet article
         foreach ($dons as $don) {
             $resteDon = (int) $don['quantite'];
 
             // Besoins pour cet article, par ordre de date de saisie
+=======
+        // Maps pour affichage
+        $villesMap = [];
+        $villes = $this->db->fetchAll("SELECT id, nom FROM ville");
+        foreach ($villes as $v) {
+            $villesMap[(int)$v['id']] = $v['nom'];
+        }
+
+        $articlesMap = [];
+        $articles = $this->db->fetchAll("SELECT a.id, a.nom, a.prix_unitaire FROM article a");
+        foreach ($articles as $a) {
+            $articlesMap[(int)$a['id']] = $a;
+        }
+
+        // Suivi en mémoire des quantités déjà attribuées par besoin_id
+        $attribueParBesoin = [];
+
+        foreach ($dons as $don) {
+            $resteDon = (int) $don['quantite'];
+
+            // Besoins pour cet article, par ordre de date_saisie (priorité premier arrivé)
+>>>>>>> d3692f7 (commit v1)
             $besoins = $besoinModel->findByArticle((int) $don['article_id']);
 
             foreach ($besoins as $besoin) {
@@ -73,12 +106,20 @@ class Dispatch extends BaseModel
                     break;
                 }
 
+<<<<<<< HEAD
                 $besoinRestant = (int) $besoin['quantite'] - (int) $besoin['deja_attribue'];
+=======
+                $besoinId = (int) $besoin['id'];
+                $dejaAttribue = ($attribueParBesoin[$besoinId] ?? 0);
+                $besoinRestant = (int) $besoin['quantite'] - $dejaAttribue;
+
+>>>>>>> d3692f7 (commit v1)
                 if ($besoinRestant <= 0) {
                     continue;
                 }
 
                 $aAttribuer = min($resteDon, $besoinRestant);
+<<<<<<< HEAD
 
                 $this->create([
                     'don_id' => $don['id'],
@@ -89,5 +130,27 @@ class Dispatch extends BaseModel
                 $resteDon -= $aAttribuer;
             }
         }
+=======
+                $articleInfo = $articlesMap[(int)$don['article_id']] ?? null;
+                $prixUnit = $articleInfo ? (float)$articleInfo['prix_unitaire'] : 0;
+
+                $results[] = [
+                    'don_id' => $don['id'],
+                    'ville_id' => $besoin['ville_id'],
+                    'ville_nom' => $villesMap[(int)$besoin['ville_id']] ?? 'Inconnu',
+                    'article_nom' => $don['article_nom'],
+                    'quantite_attribuee' => $aAttribuer,
+                    'prix_unitaire' => $prixUnit,
+                    'montant' => $aAttribuer * $prixUnit,
+                ];
+
+                // Mettre à jour le suivi en mémoire
+                $attribueParBesoin[$besoinId] = $dejaAttribue + $aAttribuer;
+                $resteDon -= $aAttribuer;
+            }
+        }
+
+        return $results;
+>>>>>>> d3692f7 (commit v1)
     }
 }

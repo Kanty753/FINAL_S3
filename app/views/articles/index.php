@@ -1,6 +1,10 @@
 <?php
 /** @var array $articles */
 function formatPrix($v) { return number_format((float)$v, 0, ',', ' ') . ' Ar'; }
+<<<<<<< HEAD
+=======
+$base_url = Flight::baseUrl();
+>>>>>>> d3692f7 (commit v1)
 ?>
 
 <div class="page-header">
@@ -8,7 +12,11 @@ function formatPrix($v) { return number_format((float)$v, 0, ',', ' ') . ' Ar'; 
         <h2><i class="fas fa-box-open"></i> Articles</h2>
         <p>Catalogue des articles avec prix unitaire et type de besoin</p>
     </div>
+<<<<<<< HEAD
     <a href="/articles/create" class="btn btn-primary"><i class="fas fa-plus"></i> Nouvel article</a>
+=======
+    <a href="<?= $base_url ?>/articles/create" class="btn btn-primary"><i class="fas fa-plus"></i> Nouvel article</a>
+>>>>>>> d3692f7 (commit v1)
 </div>
 
 <div class="card">
