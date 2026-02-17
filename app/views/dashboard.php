@@ -4,6 +4,10 @@
 /** @var array $dashboard */
 
 function formatMontant($v) { return number_format((float)$v, 0, ',', ' ') . ' Ar'; }
+<<<<<<< HEAD
+=======
+$base_url = Flight::baseUrl();
+>>>>>>> d3692f7 (commit v1)
 ?>
 
 <div class="page-header">
@@ -11,9 +15,15 @@ function formatMontant($v) { return number_format((float)$v, 0, ',', ' ') . ' Ar
         <h2>📊 Tableau de bord</h2>
         <p>Vue d'ensemble des besoins et des dons attribués par ville</p>
     </div>
-    <a href="/dispatches/simuler" class="btn btn-primary" onclick="event.preventDefault(); simulerDispatch();">
-        <i class="fas fa-sync-alt"></i> Simuler le dispatch
-    </a>
+<<<<<<< HEAD
+    <form method="POST" action="/dispatches/simuler" style="display:inline" onsubmit="return confirm('Cela va recalculer tous les dispatches. Continuer ?')">
+=======
+    <form method="POST" action="<?= $base_url ?>/dispatches/simuler" style="display:inline" onsubmit="return confirm('Cela va recalculer tous les dispatches. Continuer ?')">
+>>>>>>> d3692f7 (commit v1)
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-sync-alt"></i> Simuler le dispatch
+        </button>
+    </form>
 </div>
 
 <!-- Statistiques -->

@@ -44,11 +44,17 @@ class Besoin extends BaseModel
     }
 
     /**
+<<<<<<< HEAD
      * Besoins pour un article donné, par ordre de date de saisie
+=======
+     * Besoins pour un article donné, par ordre de date de saisie (premier arrivé = premier servi)
+     * Le deja_attribue est calculé par besoin individuel (via ville_id + article_id dans dispatch)
+>>>>>>> d3692f7 (commit v1)
      */
     public function findByArticle(int $articleId): array
     {
         return $this->db->fetchAll("
+<<<<<<< HEAD
             SELECT b.id, b.ville_id, b.quantite,
                    COALESCE((SELECT SUM(di.quantite_attribuee) FROM dispatch di
                              JOIN don dn ON di.don_id = dn.id
@@ -57,5 +63,19 @@ class Besoin extends BaseModel
             WHERE b.article_id = ?
             ORDER BY b.date_saisie ASC, b.id ASC
         ", [$articleId, $articleId]);
+=======
+            SELECT b.id, b.ville_id, b.quantite, b.date_saisie,
+                   COALESCE((
+                       SELECT SUM(di.quantite_attribuee)
+                       FROM dispatch di
+                       JOIN don dn ON di.don_id = dn.id
+                       WHERE di.ville_id = b.ville_id
+                         AND dn.article_id = b.article_id
+                   ), 0) AS deja_attribue
+            FROM besoin b
+            WHERE b.article_id = ?
+            ORDER BY b.date_saisie ASC, b.id ASC
+        ", [$articleId]);
+>>>>>>> d3692f7 (commit v1)
     }
 }

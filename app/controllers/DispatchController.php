@@ -6,7 +6,10 @@ use flight\Engine;
 use app\models\Dispatch;
 use app\models\Don;
 use app\models\Besoin;
+<<<<<<< HEAD
 use app\models\Ville;
+=======
+>>>>>>> d3692f7 (commit v1)
 
 class DispatchController
 {
@@ -29,12 +32,23 @@ class DispatchController
     }
 
     /**
+<<<<<<< HEAD
      * GET /dispatches — Page liste des dispatches (HTML)
+=======
+     * GET /dispatches — Page liste des dispatches (HTML) avec possibilité de simuler
+>>>>>>> d3692f7 (commit v1)
      */
     public function page(): void
     {
         $dispatches = $this->dispatchModel->findAllDetailed();
+<<<<<<< HEAD
         $content = $this->app->view()->fetch('dispatches/index', ['dispatches' => $dispatches]);
+=======
+        $content = $this->app->view()->fetch('dispatches/index', [
+            'dispatches' => $dispatches,
+            'simulation' => null,
+        ]);
+>>>>>>> d3692f7 (commit v1)
         $this->app->render('layout', [
             'content' => $content,
             'page_title' => 'Dispatches',
@@ -43,6 +57,7 @@ class DispatchController
     }
 
     /**
+<<<<<<< HEAD
      * GET /dispatches/create — Formulaire de création manuelle (HTML)
      */
     public function createPage(): void
@@ -82,6 +97,8 @@ class DispatchController
     }
 
     /**
+=======
+>>>>>>> d3692f7 (commit v1)
      * GET /api/dispatches/@id — Détail d'un dispatch
      */
     public function show(int $id): void
@@ -104,6 +121,7 @@ class DispatchController
     }
 
     /**
+<<<<<<< HEAD
      * POST /api/dispatches — Créer un dispatch manuellement
      * Body JSON attendu : { "don_id": 1, "ville_id": 1, "quantite_attribuee": 50 }
      */
@@ -168,5 +186,64 @@ class DispatchController
     {
         $this->dispatchModel->deleteAll();
         $this->app->json(['success' => true, 'message' => 'Tous les dispatches ont été supprimés'], 200, true, 'utf-8', JSON_PRETTY_PRINT);
+    }
+
+    /**
+     * POST /dispatches/simuler — Lancer la simulation depuis l'interface HTML et rediriger
+=======
+     * POST /dispatches/simuler — Simulation preview depuis l'interface HTML (sans sauvegarder)
+     * Priorité : premier besoin saisi (date_saisie ASC) = premier servi
+>>>>>>> d3692f7 (commit v1)
+     */
+    public function simulerPage(): void
+    {
+        $donModel = new Don($this->app->db());
+        $besoinModel = new Besoin($this->app->db());
+<<<<<<< HEAD
+        $this->dispatchModel->simuler($donModel, $besoinModel);
+        $this->app->redirect('/dispatches');
+    }
+
+    /**
+     * POST /dispatches/reset — Supprimer tous les dispatches depuis l'interface HTML et rediriger
+     */
+    public function resetPage(): void
+    {
+        $this->dispatchModel->deleteAll();
+        $this->app->redirect('/dispatches');
+=======
+        
+        // Simuler SANS sauvegarder — ne touche pas à la BDD
+        $simulation = $this->dispatchModel->simulerPreview($donModel, $besoinModel);
+        
+        // Afficher la page avec les dispatches existants + la simulation en preview
+        $dispatches = $this->dispatchModel->findAllDetailed();
+        $content = $this->app->view()->fetch('dispatches/index', [
+            'dispatches' => $dispatches,
+            'simulation' => $simulation,
+        ]);
+        $this->app->render('layout', [
+            'content' => $content,
+            'page_title' => 'Dispatches — Simulation',
+            'active_page' => 'dispatches',
+        ]);
+    }
+
+    /**
+     * POST /api/dispatches/simuler — Simulation preview via API (JSON, sans sauvegarder)
+     */
+    public function simulerApi(): void
+    {
+        $donModel = new Don($this->app->db());
+        $besoinModel = new Besoin($this->app->db());
+
+        $simulation = $this->dispatchModel->simulerPreview($donModel, $besoinModel);
+
+        $this->app->json([
+            'success' => true,
+            'message' => 'Simulation du dispatch (preview uniquement, rien sauvegardé)',
+            'dispatches' => $simulation
+        ], 200, true, 'utf-8', JSON_PRETTY_PRINT);
+>>>>>>> d3692f7 (commit v1)
     }
 }
