@@ -15,50 +15,38 @@ INSERT INTO region (nom) VALUES
 ('Région Ouest');
 
 -- Villes
+-- Limité à 3 villes
 INSERT INTO ville (nom, region_id) VALUES
 ('Ville A', 1),
 ('Ville B', 1),
-('Ville C', 2),
-('Ville D', 3),
-('Ville E', 4);
+('Ville C', 2);
 
 -- Articles
+-- Limité à 2 articles
 INSERT INTO article (nom, type_besoin_id, prix_unitaire) VALUES
 ('Riz', 1, 2500),
-('Huile', 1, 8000),
-('Tôle', 2, 35000),
-('Clou', 2, 200),
-('Argent', 3, 1);
+('Huile', 1, 8000);
 
 -- Besoins
-INSERT INTO besoin (ville_id, article_id, quantite) VALUES
-(1, 1, 100),   -- Ville A : 100 kg de riz
-(1, 2, 50),    -- Ville A : 50 l d'huile
-(2, 1, 80),    -- Ville B : 80 kg de riz
-(2, 3, 20),    -- Ville B : 20 tôles
-(3, 2, 40),    -- Ville C : 40 l d'huile
-(3, 4, 500),   -- Ville C : 500 clous
-(4, 5, 1000),  -- Ville D : 1000 unités d'argent
-(5, 1, 60);    -- Ville E : 60 kg de riz
+-- 1 besoin par ville pour chaque article (3 villes x 2 articles = 6 besoins)
+-- Ajout de date_saisie explicite pour tester les stratégies (FIFO, etc.)
+INSERT INTO besoin (ville_id, article_id, quantite, date_saisie) VALUES
+(1, 1, 10, '2026-02-01 08:00:00'),   -- Ville A : 10 kg de riz
+(1, 2, 5,  '2026-02-02 09:00:00'),   -- Ville A : 5 l d'huile
+(2, 1, 8,  '2026-02-03 10:00:00'),   -- Ville B : 8 kg de riz
+(2, 2, 6,  '2026-02-04 11:00:00'),   -- Ville B : 6 l d'huile
+(3, 1, 12, '2026-02-05 12:00:00'),   -- Ville C : 12 kg de riz
+(3, 2, 4,  '2026-02-06 13:00:00');   -- Ville C : 4 l d'huile
 
 -- Dons
+-- Dons uniquement pour les 2 articles
 INSERT INTO don (article_id, quantite) VALUES
-(1, 120),   -- Riz : 120 kg
-(2, 70),    -- Huile : 70 l
-(3, 30),    -- Tôle : 30 pièces
-(4, 1000),  -- Clous : 1000 pièces
-(5, 500);   -- Argent : 500 unités
+(1, 20),   -- Riz : 20 kg
+(2, 10);   -- Huile : 10 l
 
 -- Dispatch simulé
-INSERT INTO dispatch (don_id, ville_id, quantite_attribuee) VALUES
-(1, 1, 100),  -- Riz : 100 kg pour Ville A
-(1, 2, 20),   -- Riz : 20 kg pour Ville B
-(2, 1, 50),   -- Huile : 50 l pour Ville A
-(2, 3, 20),   -- Huile : 20 l pour Ville C
-(3, 2, 20),   -- Tôle : 20 pièces pour Ville B
-(3, 4, 10),   -- Tôle : 10 pièces pour Ville D
-(4, 3, 500),  -- Clous : 500 pièces pour Ville C
-(5, 4, 500);  -- Argent : 500 unités pour Ville D
+-- Exemple de dispatch minimal cohérent avec les dons ci-dessus
+-- (Aucune insertion de dispatch dans ce dataset)
 
 -- ======================================
 -- REQUETE TABLEAU DE BORD EXEMPLE

@@ -37,6 +37,7 @@ class DispatchController
         $content = $this->app->view()->fetch('dispatches/index', [
             'dispatches' => $dispatches,
             'simulation' => null,
+            'strategie' => Dispatch::STRATEGIE_FIFO,
         ]);
         $this->app->render('layout', [
             'content' => $content,
@@ -132,19 +133,22 @@ class DispatchController
 
     /**
      * POST /api/dispatches/simuler — Lancer la simulation automatique du dispatch
-     * Vide tous les dispatches existants et redistribue les dons par ordre de date
+     * Vide tous les dispatches existants et redistribue les dons selon la stratégie choisie
+     * Body JSON optionnel : { "strategie": "fifo"|"plus_petit"|"proportionnel" }
      */
     public function simuler(): void
     {
         $donModel = new Don($this->app->db());
         $besoinModel = new Besoin($this->app->db());
 
-        $this->dispatchModel->simuler($donModel, $besoinModel);
+        $strategie = $this->app->request()->data->strategie ?? Dispatch::STRATEGIE_FIFO;
+        $this->dispatchModel->simuler($donModel, $besoinModel, $strategie);
 
         $dispatches = $this->dispatchModel->findAllDetailed();
         $this->app->json([
             'success' => true,
             'message' => 'Simulation du dispatch effectuée avec succès',
+            'strategie' => $strategie,
             'dispatches' => $dispatches
         ], 200, true, 'utf-8', JSON_PRETTY_PRINT);
     }
@@ -181,14 +185,17 @@ class DispatchController
         $donModel = new Don($this->app->db());
         $besoinModel = new Besoin($this->app->db());
         
+        $strategie = $this->app->request()->data->strategie ?? Dispatch::STRATEGIE_FIFO;
+        
         // Simuler SANS sauvegarder
-        $simulation = $this->dispatchModel->simulerPreview($donModel, $besoinModel);
+        $simulation = $this->dispatchModel->simulerPreview($donModel, $besoinModel, $strategie);
         
         // Afficher la page avec les dispatches existants + la simulation en preview
         $dispatches = $this->dispatchModel->findAllDetailed();
         $content = $this->app->view()->fetch('dispatches/index', [
             'dispatches' => $dispatches,
             'simulation' => $simulation,
+            'strategie' => $strategie,
         ]);
         $this->app->render('layout', [
             'content' => $content,
@@ -204,7 +211,8 @@ class DispatchController
     {
         $donModel = new Don($this->app->db());
         $besoinModel = new Besoin($this->app->db());
-        $this->dispatchModel->simuler($donModel, $besoinModel);
+        $strategie = $this->app->request()->data->strategie ?? Dispatch::STRATEGIE_FIFO;
+        $this->dispatchModel->simuler($donModel, $besoinModel, $strategie);
         $this->app->redirect('/dispatches');
     }
 

@@ -49,31 +49,39 @@ class Dispatch extends BaseModel
         $this->db->runQuery("DELETE FROM dispatch");
     }
 
+    // Constantes pour les stratégies de dispatch
+    const STRATEGIE_FIFO = 'fifo';                   // Par ordre de saisie (premier arrivé, premier servi)
+    const STRATEGIE_PLUS_PETIT = 'plus_petit';        // Par infériorité des ressources nécessaires
+    const STRATEGIE_PROPORTIONNEL = 'proportionnel';  // Répartition proportionnelle
+
     /**
-     * Récupérer les besoins bruts pour un article (sans calcul deja_attribue depuis la BDD)
-     * Triés par date_saisie ASC (priorité FIFO : premier arrivé, premier servi)
+     * Récupérer les besoins bruts pour un article
+     * @param string $strategie La stratégie de tri
      */
-    private function fetchBesoinsForArticle(Besoin $besoinModel, int $articleId): array
+    private function fetchBesoinsForArticle(Besoin $besoinModel, int $articleId, string $strategie = self::STRATEGIE_FIFO): array
     {
+        $orderBy = match ($strategie) {
+            self::STRATEGIE_PLUS_PETIT => 'b.quantite ASC, b.date_saisie ASC, b.id ASC',
+            default => 'b.date_saisie ASC, b.id ASC',
+        };
+
         return $this->db->fetchAll("
             SELECT b.id, b.ville_id, b.quantite, b.date_saisie
             FROM besoin b
             WHERE b.article_id = ?
-            ORDER BY b.date_saisie ASC, b.id ASC
+            ORDER BY {$orderBy}
         ", [$articleId]);
     }
 
     /**
-     * Simuler le dispatch automatique des dons
+     * Simuler le dispatch automatique des dons (sauvegarde en BDD)
      *
-     * Règle de priorité FIFO :
-     *  - Les dons sont traités par ordre chronologique (date_don ASC).
-     *  - Pour chaque don, on liste les besoins de cet article triés par date_saisie ASC.
-     *  - La ville qui a fait la demande en PREMIER est servie en priorité.
-     *  - Si le don couvre entièrement son besoin et qu'il reste du stock,
-     *    le reste est redistribué à la demande suivante, et ainsi de suite.
+     * @param string $strategie La stratégie de dispatch :
+     *  - 'fifo' : par ordre de saisie (premier arrivé, premier servi)
+     *  - 'plus_petit' : priorité à celui qui a le plus petit besoin
+     *  - 'proportionnel' : répartition proportionnelle entre les villes
      */
-    public function simuler(Don $donModel, Besoin $besoinModel): void
+    public function simuler(Don $donModel, Besoin $besoinModel, string $strategie = self::STRATEGIE_FIFO): void
     {
         // Vider les dispatches existants
         $this->deleteAll();
@@ -81,16 +89,23 @@ class Dispatch extends BaseModel
         // Récupérer tous les dons par ordre chronologique
         $dons = $donModel->findAllForDispatch();
 
-        // Suivi en mémoire de ce qui a déjà été attribué par besoin_id
-        // Clé : besoin_id, Valeur : quantité déjà attribuée
+        if ($strategie === self::STRATEGIE_PROPORTIONNEL) {
+            $this->simulerProportionnelSave($dons, $besoinModel);
+        } else {
+            $this->simulerSequentielSave($dons, $besoinModel, $strategie);
+        }
+    }
+
+    /**
+     * Dispatch séquentiel (FIFO ou plus petit besoin) — sauvegarde en BDD
+     */
+    private function simulerSequentielSave(array $dons, Besoin $besoinModel, string $strategie): void
+    {
         $attribueParBesoin = [];
 
-        // Pour chaque don, distribuer aux villes qui ont besoin de cet article
         foreach ($dons as $don) {
             $resteDon = (int) $don['quantite'];
-
-            // Besoins pour cet article, par ordre de date de saisie (FIFO)
-            $besoins = $this->fetchBesoinsForArticle($besoinModel, (int) $don['article_id']);
+            $besoins = $this->fetchBesoinsForArticle($besoinModel, (int) $don['article_id'], $strategie);
 
             foreach ($besoins as $besoin) {
                 if ($resteDon <= 0) {
@@ -105,7 +120,6 @@ class Dispatch extends BaseModel
                     continue;
                 }
 
-                // On attribue le minimum entre ce qui reste du don et le besoin restant
                 $aAttribuer = min($resteDon, $besoinRestant);
 
                 $this->create([
@@ -114,7 +128,6 @@ class Dispatch extends BaseModel
                     'quantite_attribuee' => $aAttribuer,
                 ]);
 
-                // Mettre à jour le suivi en mémoire
                 $attribueParBesoin[$besoinId] = $dejaAttribue + $aAttribuer;
                 $resteDon -= $aAttribuer;
             }
@@ -122,16 +135,94 @@ class Dispatch extends BaseModel
     }
 
     /**
+     * Dispatch proportionnel — sauvegarde en BDD
+     *
+     * Pour chaque don, on calcule la part proportionnelle de chaque ville :
+     *   part_ville = (besoin_ville / total_besoins) * quantite_don
+     * Arrondissement : < 0.5 → arrondi par défaut, >= 0.5 → arrondi par excès
+     * Le total attribué ne dépasse jamais le don disponible.
+     */
+    private function simulerProportionnelSave(array $dons, Besoin $besoinModel): void
+    {
+        $attribueParBesoin = [];
+
+        foreach ($dons as $don) {
+            $resteDon = (int) $don['quantite'];
+            $besoins = $this->fetchBesoinsForArticle($besoinModel, (int) $don['article_id']);
+
+            // Calculer les besoins restants effectifs
+            $besoinsEffectifs = [];
+            $totalBesoinsRestants = 0;
+            foreach ($besoins as $besoin) {
+                $besoinId = (int) $besoin['id'];
+                $dejaAttribue = $attribueParBesoin[$besoinId] ?? 0;
+                $besoinRestant = (int) $besoin['quantite'] - $dejaAttribue;
+                if ($besoinRestant > 0) {
+                    $besoinsEffectifs[] = [
+                        'id' => $besoinId,
+                        'ville_id' => $besoin['ville_id'],
+                        'quantite' => (int) $besoin['quantite'],
+                        'besoin_restant' => $besoinRestant,
+                        'date_saisie' => $besoin['date_saisie'],
+                    ];
+                    $totalBesoinsRestants += $besoinRestant;
+                }
+            }
+
+            if ($totalBesoinsRestants <= 0 || $resteDon <= 0) {
+                continue;
+            }
+
+            // Calculer la part proportionnelle pour chaque ville
+            $attributions = [];
+            $totalAttribue = 0;
+            foreach ($besoinsEffectifs as $be) {
+                $partExacte = ($be['besoin_restant'] / $totalBesoinsRestants) * $resteDon;
+                // On conserve uniquement la partie entière (arrondi à l'inférieur)
+                $partArrondie = (int) floor($partExacte);
+                // Ne pas dépasser le besoin restant de la ville
+                $partArrondie = min($partArrondie, $be['besoin_restant']);
+                $attributions[] = [
+                    'besoin_id' => $be['id'],
+                    'ville_id' => $be['ville_id'],
+                    'quantite' => $partArrondie,
+                    'besoin_restant' => $be['besoin_restant'],
+                ];
+                $totalAttribue += $partArrondie;
+            }
+
+            // S'assurer qu'on ne dépasse pas le don disponible
+            // Si l'arrondi a causé un excédent, on réduit les dernières attributions
+            while ($totalAttribue > $resteDon && !empty($attributions)) {
+                for ($i = count($attributions) - 1; $i >= 0 && $totalAttribue > $resteDon; $i--) {
+                    if ($attributions[$i]['quantite'] > 0) {
+                        $attributions[$i]['quantite']--;
+                        $totalAttribue--;
+                    }
+                }
+            }
+
+            // Enregistrer les attributions
+            foreach ($attributions as $attr) {
+                if ($attr['quantite'] > 0) {
+                    $this->create([
+                        'don_id' => $don['id'],
+                        'ville_id' => $attr['ville_id'],
+                        'quantite_attribuee' => $attr['quantite'],
+                    ]);
+                    $attribueParBesoin[$attr['besoin_id']] = ($attribueParBesoin[$attr['besoin_id']] ?? 0) + $attr['quantite'];
+                }
+            }
+        }
+    }
+
+    /**
      * Simuler le dispatch SANS sauvegarder — retourne un tableau de résultats preview
      *
-     * Même logique de priorité FIFO que simuler() :
-     *  - Premier demandeur servi en premier, le reste redistribué aux suivants.
-     *  - Suivi entièrement en mémoire (aucune écriture en BDD).
+     * @param string $strategie La stratégie de dispatch ('fifo', 'plus_petit', 'proportionnel')
      */
-    public function simulerPreview(Don $donModel, Besoin $besoinModel): array
+    public function simulerPreview(Don $donModel, Besoin $besoinModel, string $strategie = self::STRATEGIE_FIFO): array
     {
-        $results = [];
-
         // Récupérer tous les dons par ordre chronologique
         $dons = $donModel->findAllForDispatch();
 
@@ -148,12 +239,27 @@ class Dispatch extends BaseModel
             $articlesMap[(int)$a['id']] = $a;
         }
 
-        // Suivi en mémoire de ce qui a déjà été attribué par besoin_id
+        if ($strategie === self::STRATEGIE_PROPORTIONNEL) {
+            return $this->simulerProportionnelPreview($dons, $besoinModel, $villesMap, $articlesMap);
+        } else {
+            return $this->simulerSequentielPreview($dons, $besoinModel, $villesMap, $articlesMap, $strategie);
+        }
+    }
+
+    /**
+     * Preview séquentiel (FIFO ou plus petit besoin)
+     */
+    private function simulerSequentielPreview(array $dons, Besoin $besoinModel, array $villesMap, array $articlesMap, string $strategie): array
+    {
+        $results = [];
         $attribueParBesoin = [];
 
         foreach ($dons as $don) {
             $resteDon = (int) $don['quantite'];
-            $besoins = $this->fetchBesoinsForArticle($besoinModel, (int) $don['article_id']);
+            $besoins = $this->fetchBesoinsForArticle($besoinModel, (int) $don['article_id'], $strategie);
+
+            // Compteur pour savoir le rang de la ville servie pour CE don
+            $rangDansDon = 0;
 
             foreach ($besoins as $besoin) {
                 if ($resteDon <= 0) {
@@ -172,6 +278,12 @@ class Dispatch extends BaseModel
                 $articleInfo = $articlesMap[(int)$don['article_id']] ?? null;
                 $prixUnit = $articleInfo ? (float)$articleInfo['prix_unitaire'] : 0;
 
+                // La priorité dépend du rang dans le don : seul le 1er servi a la priorité
+                $prioriteLabel = match ($strategie) {
+                    self::STRATEGIE_PLUS_PETIT => $rangDansDon === 0 ? 'Plus petit besoin' : 'Redistribution',
+                    default => $rangDansDon === 0 ? 'Premier servi' : 'Redistribution',
+                };
+
                 $results[] = [
                     'don_id' => $don['id'],
                     'besoin_id' => $besoinId,
@@ -184,12 +296,109 @@ class Dispatch extends BaseModel
                     'date_demande' => $besoin['date_saisie'],
                     'prix_unitaire' => $prixUnit,
                     'montant' => $aAttribuer * $prixUnit,
-                    'priorite' => $dejaAttribue === 0 ? 'Premier servi' : 'Suite',
+                    'priorite' => $prioriteLabel,
                 ];
 
-                // Mettre à jour le suivi en mémoire
                 $attribueParBesoin[$besoinId] = $dejaAttribue + $aAttribuer;
                 $resteDon -= $aAttribuer;
+                $rangDansDon++;
+            }
+        }
+
+        return $results;
+    }
+
+    /**
+     * Preview proportionnel
+     */
+    private function simulerProportionnelPreview(array $dons, Besoin $besoinModel, array $villesMap, array $articlesMap): array
+    {
+        $results = [];
+        $attribueParBesoin = [];
+
+        foreach ($dons as $don) {
+            $resteDon = (int) $don['quantite'];
+            $besoins = $this->fetchBesoinsForArticle($besoinModel, (int) $don['article_id']);
+
+            // Calculer les besoins restants effectifs
+            $besoinsEffectifs = [];
+            $totalBesoinsRestants = 0;
+            foreach ($besoins as $besoin) {
+                $besoinId = (int) $besoin['id'];
+                $dejaAttribue = $attribueParBesoin[$besoinId] ?? 0;
+                $besoinRestant = (int) $besoin['quantite'] - $dejaAttribue;
+                if ($besoinRestant > 0) {
+                    $besoinsEffectifs[] = [
+                        'id' => $besoinId,
+                        'ville_id' => $besoin['ville_id'],
+                        'quantite' => (int) $besoin['quantite'],
+                        'besoin_restant' => $besoinRestant,
+                        'date_saisie' => $besoin['date_saisie'],
+                    ];
+                    $totalBesoinsRestants += $besoinRestant;
+                }
+            }
+
+            if ($totalBesoinsRestants <= 0 || $resteDon <= 0) {
+                continue;
+            }
+
+            // Calculer la part proportionnelle pour chaque ville
+            $attributionsTemp = [];
+            $totalAttribue = 0;
+            foreach ($besoinsEffectifs as $be) {
+                $partExacte = ($be['besoin_restant'] / $totalBesoinsRestants) * $resteDon;
+                // On conserve uniquement la partie entière (arrondi à l'inférieur)
+                $partArrondie = (int) floor($partExacte);
+                $partArrondie = min($partArrondie, $be['besoin_restant']);
+                $attributionsTemp[] = [
+                    'besoin_id' => $be['id'],
+                    'ville_id' => $be['ville_id'],
+                    'quantite_demandee' => $be['quantite'],
+                    'besoin_restant' => $be['besoin_restant'],
+                    'quantite_attribuee' => $partArrondie,
+                    'part_exacte' => $partExacte,
+                    'date_saisie' => $be['date_saisie'],
+                ];
+                $totalAttribue += $partArrondie;
+            }
+
+            // Ajuster si l'arrondi a causé un excédent
+            while ($totalAttribue > $resteDon && !empty($attributionsTemp)) {
+                for ($i = count($attributionsTemp) - 1; $i >= 0 && $totalAttribue > $resteDon; $i--) {
+                    if ($attributionsTemp[$i]['quantite_attribuee'] > 0) {
+                        $attributionsTemp[$i]['quantite_attribuee']--;
+                        $totalAttribue--;
+                    }
+                }
+            }
+
+            $articleInfo = $articlesMap[(int)$don['article_id']] ?? null;
+            $prixUnit = $articleInfo ? (float)$articleInfo['prix_unitaire'] : 0;
+
+            foreach ($attributionsTemp as $attr) {
+                $qteAttr = $attr['quantite_attribuee'];
+                $resteNonCouvert = $attr['besoin_restant'] - $qteAttr;
+
+                $results[] = [
+                    'don_id' => $don['id'],
+                    'besoin_id' => $attr['besoin_id'],
+                    'ville_id' => $attr['ville_id'],
+                    'ville_nom' => $villesMap[(int)$attr['ville_id']] ?? 'Inconnu',
+                    'article_nom' => $don['article_nom'],
+                    'quantite_demandee' => $attr['quantite_demandee'],
+                    'quantite_attribuee' => $qteAttr,
+                    'quantite_restante' => $resteNonCouvert,
+                    'date_demande' => $attr['date_saisie'],
+                    'prix_unitaire' => $prixUnit,
+                    'montant' => $qteAttr * $prixUnit,
+                    'priorite' => 'Proportionnel',
+                    'part_exacte' => round($attr['part_exacte'], 2),
+                ];
+
+                if ($qteAttr > 0) {
+                    $attribueParBesoin[$attr['besoin_id']] = ($attribueParBesoin[$attr['besoin_id']] ?? 0) + $qteAttr;
+                }
             }
         }
 
