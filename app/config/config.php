@@ -46,7 +46,8 @@ if (empty($app) === true) {
 $app->path(__DIR__ . $ds . '..' . $ds . '..');
 
 // Core config variables
-$app->set('flight.base_url', '/',);           // Base URL for your app. Change if app is in a subdirectory (e.g., '/myapp/')
+// $app->set('flight.base_url', '/',);           // Base URL for your app. Change if app is in a subdirectory (e.g., '/myapp/')
+$app->set('flight.base_url', '/ETU004103/FINAL_S3_v3/public',);           // Base URL for your app. Change if app is in a subdirectory (e.g., '/myapp/')
 $app->set('flight.case_sensitive', false);    // Set true for case sensitive routes. Default: false
 $app->set('flight.log_errors', true);         // Log errors to file. Recommended: true in production
 $app->set('flight.handle_errors', false);     // Let Tracy handle errors if false. Set true to use Flight's error handler
@@ -58,6 +59,14 @@ $app->set('flight.content_length', false);    // Send content length header. Usu
 $nonce = bin2hex(random_bytes(16));
 $app->set('csp_nonce', $nonce);
 
+// Helper: base_url — retourne le base_url sans slash final
+// Utilisable partout via Flight::baseUrl() ou $app->get('base_url')
+$base_url = rtrim($app->get('flight.base_url'), '/');
+$app->set('base_url', $base_url);
+Flight::map('baseUrl', function () use ($app) {
+	return $app->get('base_url');
+});
+
 /**********************************************
  *           User Configuration               *
  **********************************************/
@@ -66,10 +75,23 @@ return [
 	 *         Database Settings          *
 	 **************************************/
 	'database' => [
-		'host'     => 'localhost',
-		'dbname'   => 'bngrc',
-		'user'     => 'root',
-		'password' => '',
+		'host'     => 'localhost:3306',     // Utiliser 127.0.0.1 au lieu de localhost pour forcer TCP (évite l'erreur de socket)
+		'dbname'   => 'db_s2_ETU004103',
+		'user'     => 'ETU004103',
+		'password' => 'dA6pkdXy',
+		// 'dbname'   => 'bngrc',
+		// 'user'     => 'root',
+		// 'password' => '',
+
+
+		// MySQL Example:
+		// 'host'     => 'localhost',      // Database host (e.g., 'localhost', 'db.example.com')
+		// 'dbname'   => 'your_db_name',   // Database name (e.g., 'flightphp')
+		// 'user'     => 'your_username',  // Database user (e.g., 'root')
+		// 'password' => 'your_password',  // Database password (never commit real passwords)
+
+		// SQLite Example:
+		// 'file_path' => __DIR__ . $ds . '..' . $ds . 'database.sqlite', // Path to SQLite file
 	],
 
 	// Google OAuth Credentials
@@ -80,4 +102,6 @@ return [
 	// ],
 
 	// Add more configuration sections below as needed
+	// Pourcentage de frais d'achat (modifiable)
+	'frais_achat_pourcent' => 10, // Par défaut 10%, à modifier selon besoin
 ];

@@ -2,61 +2,226 @@
 
 namespace app\controllers;
 
-use app\models\Besoin;
+use flight\Engine;
 use app\models\Dispatch;
 use app\models\Don;
+use app\models\Besoin;
 use app\models\Ville;
-use flight\Engine;
 
 class DispatchController
 {
     protected Engine $app;
+    protected Dispatch $dispatchModel;
 
     public function __construct(Engine $app)
     {
         $this->app = $app;
-    }
-
-    public function index()
-    {
-        $model = new Dispatch($this->app->db());
-        $this->app->render('dispatches/index', ['dispatches' => $model->findAllDetailed()]);
+        $this->dispatchModel = new Dispatch($app->db());
     }
 
     /**
-     * Simuler le dispatch automatique des dons
+     * GET /api/dispatches — Liste de tous les dispatches avec détails (ville, article, montant)
      */
-    public function simuler()
+    public function index(): void
     {
-        $db = $this->app->db();
-        $dispatchModel = new Dispatch($db);
-        $donModel      = new Don($db);
-        $besoinModel   = new Besoin($db);
-
-        $dispatchModel->simuler($donModel, $besoinModel);
-        $this->app->redirect('/dashboard');
+        $dispatches = $this->dispatchModel->findAllDetailed();
+        $this->app->json($dispatches, 200, true, 'utf-8', JSON_PRETTY_PRINT);
     }
 
-    public function create()
+    /**
+     * GET /dispatches — Page liste des dispatches (HTML)
+     */
+    public function page(): void
     {
-        $db = $this->app->db();
-        $donModel   = new Don($db);
-        $villeModel = new Ville($db);
-
-        $this->app->render('dispatches/create', [
-            'dons'   => $donModel->findAvailable(),
-            'villes' => $villeModel->findAll(),
+        $dispatches = $this->dispatchModel->findAllDetailed();
+        $content = $this->app->view()->fetch('dispatches/index', [
+            'dispatches' => $dispatches,
+            'simulation' => null,
+            'strategie' => Dispatch::STRATEGIE_FIFO,
+        ]);
+        $this->app->render('layout', [
+            'content' => $content,
+            'page_title' => 'Dispatches',
+            'active_page' => 'dispatches',
         ]);
     }
 
-    public function store()
+    /**
+     * GET /dispatches/create — Formulaire de création manuelle (HTML)
+     */
+    public function createPage(): void
     {
-        $model = new Dispatch($this->app->db());
-        $model->create([
-            'don_id'             => $this->app->request()->data->don_id,
-            'ville_id'           => $this->app->request()->data->ville_id,
-            'quantite_attribuee' => $this->app->request()->data->quantite_attribuee,
+        $donModel = new Don($this->app->db());
+        $villeModel = new Ville($this->app->db());
+        $dons = $donModel->findAvailable();
+        $villes = $villeModel->findAll();
+        $content = $this->app->view()->fetch('dispatches/create', [
+            'dons' => $dons,
+            'villes' => $villes,
         ]);
+        $this->app->render('layout', [
+            'content' => $content,
+            'page_title' => 'Nouveau dispatch',
+            'active_page' => 'dispatches',
+        ]);
+    }
+
+    /**
+     * POST /dispatches — Traiter le formulaire de création (HTML)
+     */
+    public function store(): void
+    {
+        $data = $this->app->request()->data;
+        $don_id = $data->don_id ?? null;
+        $ville_id = $data->ville_id ?? null;
+        $quantite = $data->quantite_attribuee ?? null;
+        if ($don_id && $ville_id && $quantite) {
+            $this->dispatchModel->create([
+                'don_id' => (int) $don_id,
+                'ville_id' => (int) $ville_id,
+                'quantite_attribuee' => (int) $quantite,
+            ]);
+        }
+        $this->app->redirect('/dispatches');
+    }
+
+    /**
+     * GET /api/dispatches/@id — Détail d'un dispatch
+     */
+    public function show(int $id): void
+    {
+        $dispatch = $this->dispatchModel->findById($id);
+        if (!$dispatch) {
+            $this->app->json(['error' => 'Dispatch non trouvé'], 404, true, 'utf-8', JSON_PRETTY_PRINT);
+            return;
+        }
+        $this->app->json($dispatch, 200, true, 'utf-8', JSON_PRETTY_PRINT);
+    }
+
+    /**
+     * GET /api/dispatches/par-ville — Dispatches groupés par ville (pour tableau de bord)
+     */
+    public function parVille(): void
+    {
+        $dispatches = $this->dispatchModel->findDispatchesParVille();
+        $this->app->json($dispatches, 200, true, 'utf-8', JSON_PRETTY_PRINT);
+    }
+
+    /**
+     * POST /api/dispatches — Créer un dispatch manuellement
+     * Body JSON attendu : { "don_id": 1, "ville_id": 1, "quantite_attribuee": 50 }
+     */
+    public function create(): void
+    {
+        $data = $this->app->request()->data;
+        $don_id = $data->don_id ?? null;
+        $ville_id = $data->ville_id ?? null;
+        $quantite = $data->quantite_attribuee ?? null;
+
+        if (!$don_id || !$ville_id || !$quantite) {
+            $this->app->json(['error' => 'Les champs "don_id", "ville_id" et "quantite_attribuee" sont requis'], 400, true, 'utf-8', JSON_PRETTY_PRINT);
+            return;
+        }
+
+        $id = $this->dispatchModel->create([
+            'don_id' => (int) $don_id,
+            'ville_id' => (int) $ville_id,
+            'quantite_attribuee' => (int) $quantite
+        ]);
+        $this->app->json(['success' => true, 'id' => $id], 201, true, 'utf-8', JSON_PRETTY_PRINT);
+    }
+
+    /**
+     * POST /api/dispatches/simuler — Lancer la simulation automatique du dispatch
+     * Vide tous les dispatches existants et redistribue les dons selon la stratégie choisie
+     * Body JSON optionnel : { "strategie": "fifo"|"plus_petit"|"proportionnel" }
+     */
+    public function simuler(): void
+    {
+        $donModel = new Don($this->app->db());
+        $besoinModel = new Besoin($this->app->db());
+
+        $strategie = $this->app->request()->data->strategie ?? Dispatch::STRATEGIE_FIFO;
+        $this->dispatchModel->simuler($donModel, $besoinModel, $strategie);
+
+        $dispatches = $this->dispatchModel->findAllDetailed();
+        $this->app->json([
+            'success' => true,
+            'message' => 'Simulation du dispatch effectuée avec succès',
+            'strategie' => $strategie,
+            'dispatches' => $dispatches
+        ], 200, true, 'utf-8', JSON_PRETTY_PRINT);
+    }
+
+    /**
+     * DELETE /api/dispatches/@id — Supprimer un dispatch
+     */
+    public function destroy(int $id): void
+    {
+        $dispatch = $this->dispatchModel->findById($id);
+        if (!$dispatch) {
+            $this->app->json(['error' => 'Dispatch non trouvé'], 404, true, 'utf-8', JSON_PRETTY_PRINT);
+            return;
+        }
+
+        $this->dispatchModel->delete($id);
+        $this->app->json(['success' => true], 200, true, 'utf-8', JSON_PRETTY_PRINT);
+    }
+
+    /**
+     * DELETE /api/dispatches — Supprimer tous les dispatches (reset)
+     */
+    public function destroyAll(): void
+    {
+        $this->dispatchModel->deleteAll();
+        $this->app->json(['success' => true, 'message' => 'Tous les dispatches ont été supprimés'], 200, true, 'utf-8', JSON_PRETTY_PRINT);
+    }
+
+    /**
+     * POST /dispatches/simuler — Simulation preview depuis l'interface HTML (sans sauvegarder)
+     */
+    public function simulerPage(): void
+    {
+        $donModel = new Don($this->app->db());
+        $besoinModel = new Besoin($this->app->db());
+        
+        $strategie = $this->app->request()->data->strategie ?? Dispatch::STRATEGIE_FIFO;
+        
+        // Simuler SANS sauvegarder
+        $simulation = $this->dispatchModel->simulerPreview($donModel, $besoinModel, $strategie);
+        
+        // Afficher la page avec les dispatches existants + la simulation en preview
+        $dispatches = $this->dispatchModel->findAllDetailed();
+        $content = $this->app->view()->fetch('dispatches/index', [
+            'dispatches' => $dispatches,
+            'simulation' => $simulation,
+            'strategie' => $strategie,
+        ]);
+        $this->app->render('layout', [
+            'content' => $content,
+            'page_title' => 'Dispatches — Simulation',
+            'active_page' => 'dispatches',
+        ]);
+    }
+
+    /**
+     * POST /dispatches/valider — Valider et sauvegarder le dispatch (supprime les anciens et recalcule)
+     */
+    public function validerPage(): void
+    {
+        $donModel = new Don($this->app->db());
+        $besoinModel = new Besoin($this->app->db());
+        $strategie = $this->app->request()->data->strategie ?? Dispatch::STRATEGIE_FIFO;
+        $this->dispatchModel->simuler($donModel, $besoinModel, $strategie);
+        $this->app->redirect('/dispatches');
+    }
+
+    /**
+     * POST /dispatches/reset — Supprimer tous les dispatches depuis l'interface HTML et rediriger
+     */
+    public function resetPage(): void
+    {
+        $this->dispatchModel->deleteAll();
         $this->app->redirect('/dispatches');
     }
 }

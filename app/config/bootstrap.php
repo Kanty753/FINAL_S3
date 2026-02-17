@@ -23,6 +23,9 @@ $app = Flight::app();
  */
 $config = require('config.php');
 
+// Store config values in Flight for easy access from controllers
+$app->set('frais_achat_pourcent', $config['frais_achat_pourcent'] ?? 10);
+
 /*
  * Load the services file.
  * A "service" is basically something special that you want to use in your app.

@@ -1,24 +1,22 @@
 <?php
-ob_start();
+/** Formulaire de création d'une région */
+$base_url = Flight::baseUrl();
 ?>
 
-<h1>🌍 Ajouter une région</h1>
-
-<div class="card" style="max-width: 500px;">
-    <form action="/regions" method="POST">
-        <div class="form-group">
-            <label for="nom">Nom de la région</label>
-            <input type="text" id="nom" name="nom" class="form-control" required placeholder="Ex: Analamanga">
-        </div>
-        <div class="flex gap-1">
-            <button type="submit" class="btn btn-success">✅ Enregistrer</button>
-            <a href="/regions" class="btn btn-danger">Annuler</a>
-        </div>
-    </form>
+<div class="page-header">
+    <div>
+        <h2><i class="fas fa-map"></i> Nouvelle région</h2>
+        <p>Ajouter une nouvelle région géographique</p>
+    </div>
+    <a href="<?= $base_url ?>/regions" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Retour</a>
 </div>
 
-<?php
-$content = ob_get_clean();
-$title = 'Ajouter une région';
-include __DIR__ . '/../layout.php';
-?>
+<div class="card" style="max-width:600px">
+    <form method="POST" action="<?= $base_url ?>/regions">
+        <div class="form-group">
+            <label for="nom"><i class="fas fa-tag"></i> Nom de la région</label>
+            <input type="text" name="nom" id="nom" class="form-control" placeholder="Ex: Région Nord" required>
+        </div>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-check"></i> Enregistrer</button>
+    </form>
+</div>

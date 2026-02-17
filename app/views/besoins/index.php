@@ -1,61 +1,66 @@
 <?php
-ob_start();
+/** @var array $besoins */
+function formatMontantB($v) { return number_format((float)$v, 0, ',', ' ') . ' Ar'; }
+$base_url = Flight::baseUrl();
 ?>
 
-<div class="card-header">
-    <h1>📋 Liste des besoins</h1>
-    <a href="/besoins/create" class="btn btn-primary">+ Saisir un besoin</a>
+<div class="page-header">
+    <div>
+        <h2><i class="fas fa-hand-holding-heart"></i> Besoins</h2>
+        <p>Besoins des sinistrés par ville — saisis par article et quantité</p>
+    </div>
+    <a href="<?= $base_url ?>/besoins/create" class="btn btn-primary"><i class="fas fa-plus"></i> Nouveau besoin</a>
 </div>
 
 <div class="card">
-    <table>
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Ville</th>
-                <th>Article</th>
-                <th>Type</th>
-                <th>Quantité</th>
-                <th>Prix unitaire</th>
-                <th>Montant (Ar)</th>
-                <th>Date</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php if (empty($besoins)): ?>
-                <tr><td colspan="9" class="text-center" style="color:#999; padding:2rem;">Aucun besoin enregistré.</td></tr>
-            <?php else: ?>
-                <?php foreach ($besoins as $b): ?>
-                    <?php
-                        $type_lower = strtolower($b['type_besoin']);
-                        $badge = 'badge-nature';
-                        if (strpos($type_lower, 'mat') !== false) $badge = 'badge-materiaux';
-                        if (strpos($type_lower, 'arg') !== false) $badge = 'badge-argent';
-                    ?>
+    <div class="card-title"><i class="fas fa-list"></i> Liste des besoins</div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Ville</th>
+                    <th>Article</th>
+                    <th>Type</th>
+                    <th class="text-right">Quantité</th>
+                    <th class="text-right">P.U.</th>
+                    <th class="text-right">Montant total</th>
+                    <th>Date saisie</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (!empty($besoins)): ?>
+                    <?php foreach ($besoins as $b): ?>
                     <tr>
-                        <td><?= $b['id'] ?></td>
-                        <td><strong><?= htmlspecialchars($b['ville_nom']) ?></strong></td>
+                        <td class="text-muted">#<?= $b['id'] ?></td>
+                        <td class="fw-bold"><?= htmlspecialchars($b['ville_nom']) ?></td>
                         <td><?= htmlspecialchars($b['article_nom']) ?></td>
-                        <td><span class="badge <?= $badge ?>"><?= htmlspecialchars($b['type_besoin']) ?></span></td>
-                        <td class="text-right"><?= number_format($b['quantite'], 0, ',', ' ') ?></td>
-                        <td class="text-right"><?= number_format($b['prix_unitaire'], 0, ',', ' ') ?></td>
-                        <td class="text-right"><?= number_format($b['montant_total'], 0, ',', ' ') ?></td>
-                        <td><?= date('d/m/Y H:i', strtotime($b['date_saisie'])) ?></td>
                         <td>
-                            <form action="/besoins/delete/<?= $b['id'] ?>" method="POST" style="display:inline" onsubmit="return confirm('Supprimer ce besoin ?')">
-                                <button type="submit" class="btn btn-danger btn-sm">🗑️</button>
-                            </form>
+                            <?php
+                                $cls = 'badge-nature';
+                                if ($b['type_besoin'] === 'Matériaux') $cls = 'badge-materiaux';
+                                elseif ($b['type_besoin'] === 'Argent') $cls = 'badge-argent';
+                            ?>
+                            <span class="badge <?= $cls ?>"><?= htmlspecialchars($b['type_besoin']) ?></span>
+                        </td>
+                        <td class="text-right"><?= number_format((int)$b['quantite'], 0, ',', ' ') ?></td>
+                        <td class="text-right"><?= formatMontantB($b['prix_unitaire']) ?></td>
+                        <td class="text-right money"><?= formatMontantB($b['montant_total']) ?></td>
+                        <td class="text-muted"><?= date('d/m/Y H:i', strtotime($b['date_saisie'])) ?></td>
+                        <td class="text-center">
+                            <button class="btn btn-danger btn-sm" onclick="confirmDelete('/api/besoins/<?= $b['id'] ?>')">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </td>
                     </tr>
-                <?php endforeach; ?>
-            <?php endif; ?>
-        </tbody>
-    </table>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr><td colspan="9">
+                        <div class="empty-state"><i class="fas fa-hand-holding-heart"></i><p>Aucun besoin enregistré</p></div>
+                    </td></tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
 </div>
-
-<?php
-$content = ob_get_clean();
-$title = 'Besoins';
-include __DIR__ . '/../layout.php';
-?>
