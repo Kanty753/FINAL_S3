@@ -126,7 +126,7 @@ $strategieLabel = $strategieLabels[$strategie] ?? $strategieLabels['fifo'];
                         </td>
                         <td class="text-right"><?= formatMontantDi($s['prix_unitaire']) ?></td>
                         <td class="text-right money-success"><?= formatMontantDi($s['montant']) ?></td>
-                        <td class="text-muted"><?= date('d/m/Y H:i', strtotime($s['date_demande'])) ?></td>
+                        <td class="text-muted"><?= date('d/m/Y', strtotime($s['date_demande'])) ?></td>
                         <td class="text-center">
                             <?php if ($s['priorite'] === 'Premier servi'): ?>
                                 <span class="badge" style="background:#27ae60;color:#fff;padding:3px 8px;border-radius:4px;font-size:0.8em;">

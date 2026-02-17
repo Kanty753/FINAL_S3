@@ -139,8 +139,9 @@ class Dispatch extends BaseModel
      *
      * Pour chaque don, on calcule la part proportionnelle de chaque ville :
      *   part_ville = (besoin_ville / total_besoins) * quantite_don
-     * Arrondissement : < 0.5 → arrondi par défaut, >= 0.5 → arrondi par excès
-     * Le total attribué ne dépasse jamais le don disponible.
+     * On conserve la partie entière (floor). Le reste est redistribué un par un
+     * aux villes ayant les plus grandes parties décimales, tant qu'il reste du don
+     * et des besoins non satisfaits.
      */
     private function simulerProportionnelSave(array $dons, Besoin $besoinModel): void
     {
@@ -176,28 +177,40 @@ class Dispatch extends BaseModel
             // Calculer la part proportionnelle pour chaque ville
             $attributions = [];
             $totalAttribue = 0;
-            foreach ($besoinsEffectifs as $be) {
+            foreach ($besoinsEffectifs as $idx => $be) {
                 $partExacte = ($be['besoin_restant'] / $totalBesoinsRestants) * $resteDon;
                 // On conserve uniquement la partie entière (arrondi à l'inférieur)
                 $partArrondie = (int) floor($partExacte);
                 // Ne pas dépasser le besoin restant de la ville
                 $partArrondie = min($partArrondie, $be['besoin_restant']);
+                $decimale = $partExacte - floor($partExacte);
                 $attributions[] = [
                     'besoin_id' => $be['id'],
                     'ville_id' => $be['ville_id'],
                     'quantite' => $partArrondie,
                     'besoin_restant' => $be['besoin_restant'],
+                    'decimale' => $decimale,
                 ];
                 $totalAttribue += $partArrondie;
             }
 
-            // S'assurer qu'on ne dépasse pas le don disponible
-            // Si l'arrondi a causé un excédent, on réduit les dernières attributions
-            while ($totalAttribue > $resteDon && !empty($attributions)) {
-                for ($i = count($attributions) - 1; $i >= 0 && $totalAttribue > $resteDon; $i--) {
-                    if ($attributions[$i]['quantite'] > 0) {
-                        $attributions[$i]['quantite']--;
-                        $totalAttribue--;
+            // Redistribuer le reste aux villes ayant les plus grandes décimales
+            $resteADistribuer = $resteDon - $totalAttribue;
+            if ($resteADistribuer > 0) {
+                // Trier par décimale décroissante pour prioriser
+                $indices = array_keys($attributions);
+                usort($indices, function ($a, $b) use ($attributions) {
+                    return $attributions[$b]['decimale'] <=> $attributions[$a]['decimale'];
+                });
+                foreach ($indices as $i) {
+                    if ($resteADistribuer <= 0) {
+                        break;
+                    }
+                    // Vérifier que la ville a encore un besoin non satisfait
+                    $besoinEncoreRestant = $attributions[$i]['besoin_restant'] - $attributions[$i]['quantite'];
+                    if ($besoinEncoreRestant > 0) {
+                        $attributions[$i]['quantite']++;
+                        $resteADistribuer--;
                     }
                 }
             }
@@ -351,6 +364,7 @@ class Dispatch extends BaseModel
                 // On conserve uniquement la partie entière (arrondi à l'inférieur)
                 $partArrondie = (int) floor($partExacte);
                 $partArrondie = min($partArrondie, $be['besoin_restant']);
+                $decimale = $partExacte - floor($partExacte);
                 $attributionsTemp[] = [
                     'besoin_id' => $be['id'],
                     'ville_id' => $be['ville_id'],
@@ -358,17 +372,29 @@ class Dispatch extends BaseModel
                     'besoin_restant' => $be['besoin_restant'],
                     'quantite_attribuee' => $partArrondie,
                     'part_exacte' => $partExacte,
+                    'decimale' => $decimale,
                     'date_saisie' => $be['date_saisie'],
                 ];
                 $totalAttribue += $partArrondie;
             }
 
-            // Ajuster si l'arrondi a causé un excédent
-            while ($totalAttribue > $resteDon && !empty($attributionsTemp)) {
-                for ($i = count($attributionsTemp) - 1; $i >= 0 && $totalAttribue > $resteDon; $i--) {
-                    if ($attributionsTemp[$i]['quantite_attribuee'] > 0) {
-                        $attributionsTemp[$i]['quantite_attribuee']--;
-                        $totalAttribue--;
+            // Redistribuer le reste aux villes ayant les plus grandes décimales
+            $resteADistribuer = $resteDon - $totalAttribue;
+            if ($resteADistribuer > 0) {
+                // Trier les indices par décimale décroissante pour prioriser
+                $indices = array_keys($attributionsTemp);
+                usort($indices, function ($a, $b) use ($attributionsTemp) {
+                    return $attributionsTemp[$b]['decimale'] <=> $attributionsTemp[$a]['decimale'];
+                });
+                foreach ($indices as $i) {
+                    if ($resteADistribuer <= 0) {
+                        break;
+                    }
+                    // Vérifier que la ville a encore un besoin non satisfait
+                    $besoinEncoreRestant = $attributionsTemp[$i]['besoin_restant'] - $attributionsTemp[$i]['quantite_attribuee'];
+                    if ($besoinEncoreRestant > 0) {
+                        $attributionsTemp[$i]['quantite_attribuee']++;
+                        $resteADistribuer--;
                     }
                 }
             }
