@@ -1,9 +1,6 @@
 <?php
 /** @var array $articles */
-<<<<<<< HEAD
-=======
 $base_url = Flight::baseUrl();
->>>>>>> d3692f7 (commit v1)
 ?>
 
 <div class="page-header">
@@ -11,19 +8,11 @@ $base_url = Flight::baseUrl();
         <h2><i class="fas fa-gift"></i> Nouveau don</h2>
         <p>Enregistrer un don reçu (article + quantité)</p>
     </div>
-<<<<<<< HEAD
-    <a href="/dons" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Retour</a>
-</div>
-
-<div class="card" style="max-width:600px">
-    <form method="POST" action="/dons">
-=======
     <a href="<?= $base_url ?>/dons" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Retour</a>
 </div>
 
 <div class="card" style="max-width:600px">
     <form method="POST" action="<?= $base_url ?>/dons">
->>>>>>> d3692f7 (commit v1)
         <div class="form-row">
             <div class="form-group">
                 <label for="article_id"><i class="fas fa-box-open"></i> Article</label>

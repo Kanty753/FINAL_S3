@@ -1,14 +1,10 @@
 <?php
 /** @var array $dispatches */
-<<<<<<< HEAD
-function formatMontantDi($v) { return number_format((float)$v, 0, ',', ' ') . ' Ar'; }
-=======
 /** @var array|null $simulation */
 /** @var bool $is_simulation */
 function formatMontantDi($v) { return number_format((float)$v, 0, ',', ' ') . ' Ar'; }
 $base_url = Flight::baseUrl();
 $is_simulation = !empty($simulation);
->>>>>>> d3692f7 (commit v1)
 ?>
 
 <div class="page-header">
@@ -17,31 +13,32 @@ $is_simulation = !empty($simulation);
         <p>Distribution des dons attribués aux villes sinistrées</p>
     </div>
     <div class="d-flex gap-2">
-<<<<<<< HEAD
-        <form method="POST" action="/dispatches/simuler" style="display:inline" onsubmit="return confirm('Cela va recalculer tous les dispatches. Continuer ?')">
-            <button type="submit" class="btn btn-warning">
-                <i class="fas fa-sync-alt"></i> Simuler le dispatch
-            </button>
-        </form>
-        <a href="/dispatches/create" class="btn btn-primary"><i class="fas fa-plus"></i> Nouveau dispatch</a>
-    </div>
-</div>
-
-<div class="card">
-    <div class="card-title"><i class="fas fa-list"></i> Liste des dispatches</div>
-=======
         <form method="POST" action="<?= $base_url ?>/dispatches/simuler" style="display:inline">
             <button type="submit" class="btn btn-warning">
                 <i class="fas fa-eye"></i> Simuler le dispatch
             </button>
         </form>
+        <?php if ($is_simulation): ?>
+        <form method="POST" action="<?= $base_url ?>/dispatches/valider" style="display:inline" onsubmit="return confirm('Cela va valider et enregistrer le dispatch. Continuer ?')">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-check-circle"></i> Valider le dispatch
+            </button>
+        </form>
+        <?php endif; ?>
+        <form method="POST" action="<?= $base_url ?>/dispatches/reset" style="display:inline" onsubmit="return confirm('Supprimer tous les dispatches ?')">
+            <button type="submit" class="btn btn-danger">
+                <i class="fas fa-trash"></i> Réinitialiser
+            </button>
+        </form>
+        <a href="<?= $base_url ?>/dispatches/create" class="btn btn-secondary"><i class="fas fa-plus"></i> Nouveau dispatch</a>
     </div>
 </div>
 
 <?php if ($is_simulation): ?>
 <!-- Résultat de la simulation (non sauvegardé) -->
 <div class="alert alert-success" style="background:#FEF9E7; color:#F39C12; border-left-color:#F39C12">
-    <i class="fas fa-info-circle"></i> <strong>Mode simulation :</strong> Les résultats ci-dessous sont un aperçu de la distribution. Rien n'est enregistré en base de données. La priorité est donnée aux besoins saisis en premier (date de saisie).
+    <i class="fas fa-info-circle"></i> <strong>Mode simulation :</strong> Les résultats ci-dessous ne sont PAS encore enregistrés. Cliquez sur "Valider le dispatch" pour les sauvegarder.
+    <br><small><i class="fas fa-sort-amount-up"></i> <strong>Règle de priorité :</strong> Si plusieurs villes demandent le même article, la ville ayant fait la demande en premier est servie en priorité. Le reste est redistribué aux suivantes par ordre chronologique.</small>
 </div>
 
 <div class="card">
@@ -53,9 +50,13 @@ $is_simulation = !empty($simulation);
                     <th>Don ID</th>
                     <th>Ville</th>
                     <th>Article</th>
+                    <th class="text-right">Qté demandée</th>
                     <th class="text-right">Qté attribuée</th>
+                    <th class="text-right">Reste non couvert</th>
                     <th class="text-right">P.U.</th>
                     <th class="text-right">Montant</th>
+                    <th>Date demande</th>
+                    <th class="text-center">Priorité</th>
                 </tr>
             </thead>
             <tbody>
@@ -65,13 +66,29 @@ $is_simulation = !empty($simulation);
                         <td class="text-muted">#<?= $s['don_id'] ?></td>
                         <td class="fw-bold"><?= htmlspecialchars($s['ville_nom']) ?></td>
                         <td><?= htmlspecialchars($s['article_nom']) ?></td>
+                        <td class="text-right"><?= number_format((int)$s['quantite_demandee'], 0, ',', ' ') ?></td>
                         <td class="text-right"><?= number_format((int)$s['quantite_attribuee'], 0, ',', ' ') ?></td>
+                        <td class="text-right <?= ((int)$s['quantite_restante'] > 0) ? 'text-danger' : 'text-success' ?>">
+                            <?= number_format((int)$s['quantite_restante'], 0, ',', ' ') ?>
+                        </td>
                         <td class="text-right"><?= formatMontantDi($s['prix_unitaire']) ?></td>
                         <td class="text-right money-success"><?= formatMontantDi($s['montant']) ?></td>
+                        <td class="text-muted"><?= date('d/m/Y H:i', strtotime($s['date_demande'])) ?></td>
+                        <td class="text-center">
+                            <?php if ($s['priorite'] === 'Premier servi'): ?>
+                                <span class="badge" style="background:#27ae60;color:#fff;padding:3px 8px;border-radius:4px;font-size:0.8em;">
+                                    <i class="fas fa-trophy"></i> 1er servi
+                                </span>
+                            <?php else: ?>
+                                <span class="badge" style="background:#3498db;color:#fff;padding:3px 8px;border-radius:4px;font-size:0.8em;">
+                                    <i class="fas fa-arrow-right"></i> Redistribution
+                                </span>
+                            <?php endif; ?>
+                        </td>
                     </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <tr><td colspan="6">
+                    <tr><td colspan="10">
                         <div class="empty-state"><i class="fas fa-info-circle"></i><p>La simulation ne produit aucun dispatch</p></div>
                     </td></tr>
                 <?php endif; ?>
@@ -84,7 +101,6 @@ $is_simulation = !empty($simulation);
 <!-- Dispatches enregistrés -->
 <div class="card">
     <div class="card-title"><i class="fas fa-list"></i> Dispatches enregistrés</div>
->>>>>>> d3692f7 (commit v1)
     <div class="table-container">
         <table>
             <thead>
@@ -119,11 +135,7 @@ $is_simulation = !empty($simulation);
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr><td colspan="8">
-<<<<<<< HEAD
-                        <div class="empty-state"><i class="fas fa-truck"></i><p>Aucun dispatch enregistré — cliquez sur "Simuler" pour lancer la distribution</p></div>
-=======
-                        <div class="empty-state"><i class="fas fa-truck"></i><p>Aucun dispatch enregistré — cliquez sur "Simuler" pour voir la distribution</p></div>
->>>>>>> d3692f7 (commit v1)
+                        <div class="empty-state"><i class="fas fa-truck"></i><p>Aucun dispatch enregistré — cliquez sur "Simuler" puis "Valider" pour lancer la distribution</p></div>
                     </td></tr>
                 <?php endif; ?>
             </tbody>

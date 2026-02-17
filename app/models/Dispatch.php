@@ -42,7 +42,6 @@ class Dispatch extends BaseModel
     }
 
     /**
-<<<<<<< HEAD
      * Supprimer tous les dispatches (pour la simulation)
      */
     public function deleteAll(): void
@@ -51,34 +50,92 @@ class Dispatch extends BaseModel
     }
 
     /**
+     * Récupérer les besoins bruts pour un article (sans calcul deja_attribue depuis la BDD)
+     * Triés par date_saisie ASC (priorité FIFO : premier arrivé, premier servi)
+     */
+    private function fetchBesoinsForArticle(Besoin $besoinModel, int $articleId): array
+    {
+        return $this->db->fetchAll("
+            SELECT b.id, b.ville_id, b.quantite, b.date_saisie
+            FROM besoin b
+            WHERE b.article_id = ?
+            ORDER BY b.date_saisie ASC, b.id ASC
+        ", [$articleId]);
+    }
+
+    /**
      * Simuler le dispatch automatique des dons
-     * Règle: par ordre de date de saisie des besoins, on attribue les dons disponibles
+     *
+     * Règle de priorité FIFO :
+     *  - Les dons sont traités par ordre chronologique (date_don ASC).
+     *  - Pour chaque don, on liste les besoins de cet article triés par date_saisie ASC.
+     *  - La ville qui a fait la demande en PREMIER est servie en priorité.
+     *  - Si le don couvre entièrement son besoin et qu'il reste du stock,
+     *    le reste est redistribué à la demande suivante, et ainsi de suite.
      */
     public function simuler(Don $donModel, Besoin $besoinModel): void
     {
         // Vider les dispatches existants
         $this->deleteAll();
-=======
-     * Simuler le dispatch SANS sauvegarder — retourne un tableau de résultats preview
-     * Même logique que simuler() : priorité par date_saisie ASC (premier arrivé = premier servi).
-     * Les attributions sont suivies en mémoire pour redistribuer correctement les restes.
-     */
-    public function simulerPreview(Don $donModel, Besoin $besoinModel): array
-    {
-        $results = [];
->>>>>>> d3692f7 (commit v1)
 
-        // Récupérer tous les dons par ordre de date
+        // Récupérer tous les dons par ordre chronologique
         $dons = $donModel->findAllForDispatch();
 
-<<<<<<< HEAD
+        // Suivi en mémoire de ce qui a déjà été attribué par besoin_id
+        // Clé : besoin_id, Valeur : quantité déjà attribuée
+        $attribueParBesoin = [];
+
         // Pour chaque don, distribuer aux villes qui ont besoin de cet article
         foreach ($dons as $don) {
             $resteDon = (int) $don['quantite'];
 
-            // Besoins pour cet article, par ordre de date de saisie
-=======
-        // Maps pour affichage
+            // Besoins pour cet article, par ordre de date de saisie (FIFO)
+            $besoins = $this->fetchBesoinsForArticle($besoinModel, (int) $don['article_id']);
+
+            foreach ($besoins as $besoin) {
+                if ($resteDon <= 0) {
+                    break;
+                }
+
+                $besoinId = (int) $besoin['id'];
+                $dejaAttribue = $attribueParBesoin[$besoinId] ?? 0;
+                $besoinRestant = (int) $besoin['quantite'] - $dejaAttribue;
+
+                if ($besoinRestant <= 0) {
+                    continue;
+                }
+
+                // On attribue le minimum entre ce qui reste du don et le besoin restant
+                $aAttribuer = min($resteDon, $besoinRestant);
+
+                $this->create([
+                    'don_id' => $don['id'],
+                    'ville_id' => $besoin['ville_id'],
+                    'quantite_attribuee' => $aAttribuer,
+                ]);
+
+                // Mettre à jour le suivi en mémoire
+                $attribueParBesoin[$besoinId] = $dejaAttribue + $aAttribuer;
+                $resteDon -= $aAttribuer;
+            }
+        }
+    }
+
+    /**
+     * Simuler le dispatch SANS sauvegarder — retourne un tableau de résultats preview
+     *
+     * Même logique de priorité FIFO que simuler() :
+     *  - Premier demandeur servi en premier, le reste redistribué aux suivants.
+     *  - Suivi entièrement en mémoire (aucune écriture en BDD).
+     */
+    public function simulerPreview(Don $donModel, Besoin $besoinModel): array
+    {
+        $results = [];
+
+        // Récupérer tous les dons par ordre chronologique
+        $dons = $donModel->findAllForDispatch();
+
+        // Récupérer les infos des villes et articles pour l'affichage
         $villesMap = [];
         $villes = $this->db->fetchAll("SELECT id, nom FROM ville");
         foreach ($villes as $v) {
@@ -91,57 +148,43 @@ class Dispatch extends BaseModel
             $articlesMap[(int)$a['id']] = $a;
         }
 
-        // Suivi en mémoire des quantités déjà attribuées par besoin_id
+        // Suivi en mémoire de ce qui a déjà été attribué par besoin_id
         $attribueParBesoin = [];
 
         foreach ($dons as $don) {
             $resteDon = (int) $don['quantite'];
-
-            // Besoins pour cet article, par ordre de date_saisie (priorité premier arrivé)
->>>>>>> d3692f7 (commit v1)
-            $besoins = $besoinModel->findByArticle((int) $don['article_id']);
+            $besoins = $this->fetchBesoinsForArticle($besoinModel, (int) $don['article_id']);
 
             foreach ($besoins as $besoin) {
                 if ($resteDon <= 0) {
                     break;
                 }
 
-<<<<<<< HEAD
-                $besoinRestant = (int) $besoin['quantite'] - (int) $besoin['deja_attribue'];
-=======
                 $besoinId = (int) $besoin['id'];
-                $dejaAttribue = ($attribueParBesoin[$besoinId] ?? 0);
+                $dejaAttribue = $attribueParBesoin[$besoinId] ?? 0;
                 $besoinRestant = (int) $besoin['quantite'] - $dejaAttribue;
 
->>>>>>> d3692f7 (commit v1)
                 if ($besoinRestant <= 0) {
                     continue;
                 }
 
                 $aAttribuer = min($resteDon, $besoinRestant);
-<<<<<<< HEAD
-
-                $this->create([
-                    'don_id' => $don['id'],
-                    'ville_id' => $besoin['ville_id'],
-                    'quantite_attribuee' => $aAttribuer,
-                ]);
-
-                $resteDon -= $aAttribuer;
-            }
-        }
-=======
                 $articleInfo = $articlesMap[(int)$don['article_id']] ?? null;
                 $prixUnit = $articleInfo ? (float)$articleInfo['prix_unitaire'] : 0;
 
                 $results[] = [
                     'don_id' => $don['id'],
+                    'besoin_id' => $besoinId,
                     'ville_id' => $besoin['ville_id'],
                     'ville_nom' => $villesMap[(int)$besoin['ville_id']] ?? 'Inconnu',
                     'article_nom' => $don['article_nom'],
+                    'quantite_demandee' => (int) $besoin['quantite'],
                     'quantite_attribuee' => $aAttribuer,
+                    'quantite_restante' => $besoinRestant - $aAttribuer,
+                    'date_demande' => $besoin['date_saisie'],
                     'prix_unitaire' => $prixUnit,
                     'montant' => $aAttribuer * $prixUnit,
+                    'priorite' => $dejaAttribue === 0 ? 'Premier servi' : 'Suite',
                 ];
 
                 // Mettre à jour le suivi en mémoire
@@ -151,6 +194,5 @@ class Dispatch extends BaseModel
         }
 
         return $results;
->>>>>>> d3692f7 (commit v1)
     }
 }
