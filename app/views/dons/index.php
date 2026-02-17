@@ -1,10 +1,7 @@
 <?php
 /** @var array $dons */
 function formatMontantD($v) { return number_format((float)$v, 0, ',', ' ') . ' Ar'; }
-<<<<<<< HEAD
-=======
 $base_url = Flight::baseUrl();
->>>>>>> d3692f7 (commit v1)
 ?>
 
 <div class="page-header">
@@ -12,11 +9,7 @@ $base_url = Flight::baseUrl();
         <h2><i class="fas fa-gift"></i> Dons</h2>
         <p>Dons reçus avec article, quantité et état du dispatch</p>
     </div>
-<<<<<<< HEAD
-    <a href="/dons/create" class="btn btn-primary"><i class="fas fa-plus"></i> Nouveau don</a>
-=======
     <a href="<?= $base_url ?>/dons/create" class="btn btn-primary"><i class="fas fa-plus"></i> Nouveau don</a>
->>>>>>> d3692f7 (commit v1)
 </div>
 
 <div class="card">

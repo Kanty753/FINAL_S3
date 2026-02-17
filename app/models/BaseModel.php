@@ -28,6 +28,13 @@ abstract class BaseModel
     public function findById(int $id): ?array
     {
         $result = $this->db->fetchRow("SELECT * FROM {$this->table} WHERE id = ?", [$id]);
+
+        // The DB wrapper returns a flight\util\Collection instance for rows.
+        // Convert it to a plain array to satisfy the ?array return type.
+        if ($result instanceof \flight\util\Collection) {
+            $result = $result->getData();
+        }
+
         return $result ?: null;
     }
 

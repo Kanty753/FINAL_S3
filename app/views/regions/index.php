@@ -1,22 +1,14 @@
-<<<<<<< HEAD
-<?php /** @var array $regions */ ?>
-=======
 <?php
 /** @var array $regions */
 $base_url = Flight::baseUrl();
 ?>
->>>>>>> d3692f7 (commit v1)
 
 <div class="page-header">
     <div>
         <h2><i class="fas fa-map"></i> Régions</h2>
         <p>Gestion des régions géographiques</p>
     </div>
-<<<<<<< HEAD
-    <a href="/regions/create" class="btn btn-primary"><i class="fas fa-plus"></i> Nouvelle région</a>
-=======
     <a href="<?= $base_url ?>/regions/create" class="btn btn-primary"><i class="fas fa-plus"></i> Nouvelle région</a>
->>>>>>> d3692f7 (commit v1)
 </div>
 
 <div class="card">

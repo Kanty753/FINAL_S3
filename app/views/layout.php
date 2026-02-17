@@ -1,8 +1,5 @@
 <!DOCTYPE html>
-<<<<<<< HEAD
-=======
 <?php $base_url = Flight::baseUrl(); ?>
->>>>>>> d3692f7 (commit v1)
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -587,63 +584,44 @@
 
         <div class="nav-section">
             <div class="nav-section-title">Principal</div>
-<<<<<<< HEAD
-            <a href="/dashboard" class="nav-link <?= ($active_page ?? '') === 'dashboard' ? 'active' : '' ?>">
-=======
             <a href="<?= $base_url ?>/dashboard" class="nav-link <?= ($active_page ?? '') === 'dashboard' ? 'active' : '' ?>">
->>>>>>> d3692f7 (commit v1)
                 <i class="fas fa-chart-pie"></i> Tableau de bord
             </a>
         </div>
 
         <div class="nav-section">
             <div class="nav-section-title">Données géographiques</div>
-<<<<<<< HEAD
-            <a href="/regions" class="nav-link <?= ($active_page ?? '') === 'regions' ? 'active' : '' ?>">
-                <i class="fas fa-map"></i> Régions
-            </a>
-            <a href="/villes" class="nav-link <?= ($active_page ?? '') === 'villes' ? 'active' : '' ?>">
-=======
             <a href="<?= $base_url ?>/regions" class="nav-link <?= ($active_page ?? '') === 'regions' ? 'active' : '' ?>">
                 <i class="fas fa-map"></i> Régions
             </a>
             <a href="<?= $base_url ?>/villes" class="nav-link <?= ($active_page ?? '') === 'villes' ? 'active' : '' ?>">
->>>>>>> d3692f7 (commit v1)
                 <i class="fas fa-city"></i> Villes
             </a>
         </div>
 
         <div class="nav-section">
             <div class="nav-section-title">Catalogue</div>
-<<<<<<< HEAD
-            <a href="/articles" class="nav-link <?= ($active_page ?? '') === 'articles' ? 'active' : '' ?>">
-=======
             <a href="<?= $base_url ?>/articles" class="nav-link <?= ($active_page ?? '') === 'articles' ? 'active' : '' ?>">
->>>>>>> d3692f7 (commit v1)
                 <i class="fas fa-box-open"></i> Articles
             </a>
         </div>
 
         <div class="nav-section">
             <div class="nav-section-title">Opérations</div>
-<<<<<<< HEAD
-            <a href="/besoins" class="nav-link <?= ($active_page ?? '') === 'besoins' ? 'active' : '' ?>">
-                <i class="fas fa-hand-holding-heart"></i> Besoins
-            </a>
-            <a href="/dons" class="nav-link <?= ($active_page ?? '') === 'dons' ? 'active' : '' ?>">
-                <i class="fas fa-gift"></i> Dons
-            </a>
-            <a href="/dispatches" class="nav-link <?= ($active_page ?? '') === 'dispatches' ? 'active' : '' ?>">
-=======
             <a href="<?= $base_url ?>/besoins" class="nav-link <?= ($active_page ?? '') === 'besoins' ? 'active' : '' ?>">
                 <i class="fas fa-hand-holding-heart"></i> Besoins
             </a>
             <a href="<?= $base_url ?>/dons" class="nav-link <?= ($active_page ?? '') === 'dons' ? 'active' : '' ?>">
                 <i class="fas fa-gift"></i> Dons
             </a>
+            <a href="<?= $base_url ?>/achats" class="nav-link <?= ($active_page ?? '') === 'achats' ? 'active' : '' ?>">
+                <i class="fas fa-shopping-cart"></i> Achats
+            </a>
             <a href="<?= $base_url ?>/dispatches" class="nav-link <?= ($active_page ?? '') === 'dispatches' ? 'active' : '' ?>">
->>>>>>> d3692f7 (commit v1)
                 <i class="fas fa-truck"></i> Dispatches
+            </a>
+            <a href="<?= $base_url ?>/recapitulation" class="nav-link <?= ($active_page ?? '') === 'recapitulation' ? 'active' : '' ?>">
+                <i class="fas fa-chart-line"></i> Récapitulation
             </a>
         </div>
     </nav>
@@ -692,17 +670,11 @@
     </footer>
 
     <script nonce="<?= Flight::app()->get('csp_nonce') ?>">
-<<<<<<< HEAD
-        function confirmDelete(url) {
-            if (confirm('Êtes-vous sûr de vouloir supprimer cet élément ?')) {
-                fetch(url, { method: 'DELETE' })
-=======
         var BASE_URL = '<?= $base_url ?>';
 
         function confirmDelete(url) {
             if (confirm('Êtes-vous sûr de vouloir supprimer cet élément ?')) {
                 fetch(BASE_URL + url, { method: 'DELETE' })
->>>>>>> d3692f7 (commit v1)
                     .then(r => r.json())
                     .then(d => { if(d.success) location.reload(); else alert(d.error || 'Erreur'); })
                     .catch(() => alert('Erreur de connexion'));

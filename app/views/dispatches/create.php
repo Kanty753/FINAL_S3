@@ -1,10 +1,7 @@
 <?php
 /** @var array $dons */
 /** @var array $villes */
-<<<<<<< HEAD
-=======
 $base_url = Flight::baseUrl();
->>>>>>> d3692f7 (commit v1)
 ?>
 
 <div class="page-header">
@@ -12,19 +9,11 @@ $base_url = Flight::baseUrl();
         <h2><i class="fas fa-truck"></i> Nouveau dispatch</h2>
         <p>Attribuer manuellement un don à une ville</p>
     </div>
-<<<<<<< HEAD
-    <a href="/dispatches" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Retour</a>
-</div>
-
-<div class="card" style="max-width:600px">
-    <form method="POST" action="/dispatches">
-=======
     <a href="<?= $base_url ?>/dispatches" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Retour</a>
 </div>
 
 <div class="card" style="max-width:600px">
     <form method="POST" action="<?= $base_url ?>/dispatches">
->>>>>>> d3692f7 (commit v1)
         <div class="form-group">
             <label for="don_id"><i class="fas fa-gift"></i> Don</label>
             <select name="don_id" id="don_id" class="form-control" required>

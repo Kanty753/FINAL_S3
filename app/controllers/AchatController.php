@@ -104,7 +104,8 @@ class AchatController
         $quantite = $data->quantite ?? null;
 
         if (!$besoin_id || !$don_id || !$quantite) {
-            $this->app->redirect('/achats/create');
+            $this->app->set('achat_error', 'Tous les champs sont requis.');
+            $this->createPage();
             return;
         }
 
@@ -116,13 +117,15 @@ class AchatController
         $besoinModel = new Besoin($this->app->db());
         $besoin = $besoinModel->findById($besoin_id);
         if (!$besoin) {
-            $this->app->redirect('/achats/create');
+            $this->app->set('achat_error', 'Besoin introuvable.');
+            $this->createPage();
             return;
         }
 
         // Vérifier si le besoin est déjà couvert par les dons dispatchés
         if ($this->achatModel->besoinDejaCouvertParDon($besoin_id)) {
-            $this->app->redirect('/achats/create');
+            $this->app->set('achat_error', 'Erreur : ce besoin est déjà entièrement couvert par les dons restants (dispatch). Pas besoin d\'acheter.');
+            $this->createPage();
             return;
         }
 
@@ -130,7 +133,8 @@ class AchatController
         $articleModel = new Article($this->app->db());
         $article = $articleModel->findById((int) $besoin['article_id']);
         if (!$article) {
-            $this->app->redirect('/achats/create');
+            $this->app->set('achat_error', 'Article introuvable.');
+            $this->createPage();
             return;
         }
 
@@ -139,6 +143,29 @@ class AchatController
 
         // Appliquer les frais d'achat
         $fraisPourcent = (float) $this->app->get('frais_achat_pourcent');
+        $montantAvecFrais = $montantBrut + ($montantBrut * $fraisPourcent / 100);
+
+        // Vérifier que le don en argent a assez de fonds
+        $donsArgent = $this->achatModel->findDonsArgentDisponibles();
+        $donTrouve = null;
+        foreach ($donsArgent as $d) {
+            if ((int)$d['don_id'] === $don_id) {
+                $donTrouve = $d;
+                break;
+            }
+        }
+
+        if (!$donTrouve) {
+            $this->app->set('achat_error', 'Don en argent introuvable ou épuisé.');
+            $this->createPage();
+            return;
+        }
+
+        if ((float)$donTrouve['montant_restant'] < $montantAvecFrais) {
+            $this->app->set('achat_error', 'Fonds insuffisants dans ce don en argent. Disponible : ' . number_format((float)$donTrouve['montant_restant'], 0, ',', ' ') . ' Ar, Requis : ' . number_format($montantAvecFrais, 0, ',', ' ') . ' Ar (dont ' . $fraisPourcent . '% de frais).');
+            $this->createPage();
+            return;
+        }
 
         // Créer l'achat
         $this->achatModel->create([

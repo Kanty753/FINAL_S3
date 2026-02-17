@@ -5,7 +5,6 @@ USE bngrc;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- Drop child tables first to avoid FK constraint errors
-DROP TABLE IF EXISTS achat;
 DROP TABLE IF EXISTS dispatch;
 DROP TABLE IF EXISTS don;
 DROP TABLE IF EXISTS besoin;
@@ -89,10 +88,6 @@ CREATE TABLE IF NOT EXISTS dispatch (
     date_dispatch DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (don_id) REFERENCES don(id),
     FOREIGN KEY (ville_id) REFERENCES ville(id)
-<<<<<<< HEAD
-);
- 
-=======
 ) ENGINE=InnoDB;
 
 -- ==========================
@@ -111,4 +106,3 @@ CREATE TABLE IF NOT EXISTS achat (
     FOREIGN KEY (ville_id) REFERENCES ville(id)
 ) ENGINE=InnoDB;
 
->>>>>>> d3692f7 (commit v1)

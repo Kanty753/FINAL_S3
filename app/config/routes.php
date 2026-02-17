@@ -8,6 +8,7 @@ use app\controllers\BesoinController;
 use app\controllers\DonController;
 use app\controllers\DispatchController;
 use app\controllers\DashboardController;
+use app\controllers\AchatController;
 use app\middlewares\SecurityHeadersMiddleware;
 use flight\Engine;
 use flight\net\Router;
@@ -51,14 +52,19 @@ $router->group('', function (Router $router) use ($app) {
 	$router->post('/dons', [DonController::class, 'store']);
 
 	$router->get('/dispatches', [DispatchController::class, 'page']);
-<<<<<<< HEAD
 	$router->get('/dispatches/create', [DispatchController::class, 'createPage']);
 	$router->post('/dispatches', [DispatchController::class, 'store']);
 	$router->post('/dispatches/simuler', [DispatchController::class, 'simulerPage']);
+	$router->post('/dispatches/valider', [DispatchController::class, 'validerPage']);
 	$router->post('/dispatches/reset', [DispatchController::class, 'resetPage']);
-=======
-	$router->post('/dispatches/simuler', [DispatchController::class, 'simulerPage']);
->>>>>>> d3692f7 (commit v1)
+
+	// Achats
+	$router->get('/achats', [AchatController::class, 'page']);
+	$router->get('/achats/create', [AchatController::class, 'createPage']);
+	$router->post('/achats', [AchatController::class, 'store']);
+
+	// Récapitulation
+	$router->get('/recapitulation', [AchatController::class, 'recapitulationPage']);
 
 	// ===========================
 	// API BNGRC — Tableau de bord
@@ -141,14 +147,25 @@ $router->group('', function (Router $router) use ($app) {
 		$router->get('', [DispatchController::class, 'index']);
 		$router->get('/par-ville', [DispatchController::class, 'parVille']);
 		$router->get('/@id:[0-9]+', [DispatchController::class, 'show']);
-<<<<<<< HEAD
 		$router->post('', [DispatchController::class, 'create']);
 		$router->post('/simuler', [DispatchController::class, 'simuler']);
 		$router->delete('/@id:[0-9]+', [DispatchController::class, 'destroy']);
 		$router->delete('', [DispatchController::class, 'destroyAll']);
-=======
-		$router->post('/simuler', [DispatchController::class, 'simulerApi']);
->>>>>>> d3692f7 (commit v1)
 	});
+
+	// ===========================
+	// API BNGRC — Achats
+	// ===========================
+	$router->group('/api/achats', function () use ($router) {
+		$router->get('', [AchatController::class, 'index']);
+		$router->get('/@id:[0-9]+', [AchatController::class, 'show']);
+		$router->post('', [AchatController::class, 'create']);
+		$router->delete('/@id:[0-9]+', [AchatController::class, 'destroy']);
+	});
+
+	// ===========================
+	// API BNGRC — Récapitulation
+	// ===========================
+	$router->get('/api/recapitulation', [AchatController::class, 'recapitulationApi']);
 
 }, [SecurityHeadersMiddleware::class]);
