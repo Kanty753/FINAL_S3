@@ -1,3 +1,6 @@
+ETU004126 JORDIE
+ETU004061 KARL
+ETU004103 KANTY
 # BNGRC — Suivi des Collectes et Distributions de Dons
 
 ## � Routes
@@ -110,7 +113,6 @@
 
 ---
 
-## 🎮 Contrôleurs
 
 ### `DashboardController`
 
